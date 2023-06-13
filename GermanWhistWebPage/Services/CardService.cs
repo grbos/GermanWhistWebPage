@@ -1,4 +1,5 @@
-﻿using GermanWhistWebPage.Models;
+﻿using GermanWhistWebPage.Extensions;
+using GermanWhistWebPage.Models;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace GermanWhistWebPage.Services
@@ -17,7 +18,14 @@ namespace GermanWhistWebPage.Services
                 j += 1;
             } }
         }
-        public static bool IsWinningAgainst(Card card, Card otherCard, Suit trumpSuit, Suit leadSuit)
+
+        public List<int> GetShuffeledCards()
+        {
+            var newList = _cards.Select(card => card.Id).ToList();
+            newList.Shuffle();
+            return newList;
+        }
+        public static bool IsWinningAgainst(Card card, Card otherCard, Suit trumpSuit, Suit? leadSuit)
         {
             if (card.Suit == trumpSuit && otherCard.Suit != trumpSuit)
             {

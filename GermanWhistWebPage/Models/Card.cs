@@ -9,9 +9,9 @@
             Number = number;
         }
 
-        public int Id { get; set; }
-        public Suit Suit { get; set; }
-        public int Number { get; set; }
+        public int Id { get; private set; }
+        public Suit Suit { get; private set; }
+        public int Number { get; private set; }
         public string Name { get 
             {
                 if (Number == 11)
@@ -25,5 +25,16 @@
                 return Number.ToString();
             } 
         }
+
+        public override bool Equals(object? obj)
+        {
+            var card = obj as Card;
+            if (card == null) 
+                return false;
+
+            return Id == card.Id;
+        }
+
+
     }
 }

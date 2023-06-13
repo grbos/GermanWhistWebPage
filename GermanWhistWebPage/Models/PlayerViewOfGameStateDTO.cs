@@ -6,42 +6,46 @@ namespace GermanWhistWebPage.Models
     {
         public int Id { get; set; }
 
-        public ICollection<Card> Hand { get; private set; }
-        public Card NewHandCard { get; private set; }
+        public ICollection<int> Hand { get; private set; }
+        public int? NewHandCardId { get; private set; }
 
-        public Card TopCard { get; private set; }
+        public int TopCardId { get; private set; }
 
-        public Card PlayedCardPlayer1 { get; private set; }
-        public Card PlayedCardPlayer2 { get; private set; }
+        public int? PlayedCardIdPlayer1 { get; private set; }
+        public int? PlayedCardIdPlayer2 { get; private set; }
 
 
-        public Player StartingPlayer { get; private set; }
-        public Player TrickStartPlayer { get; private set; }
-        public Player CurrentPlayer { get; private set; }
+        public int StartingPlayerId { get; private set; }
+        public int TrickStartPlayerId { get; private set; }
+        public int CurrentPlayerId { get; private set; }
 
         public Suit TrumpSuit { get; private set; }
 
         public int TargetScore { get;   private set; }
-        public int TotalScore { get; private set; }
-        public int RoundScore { get; private set; }
+        public int TotalScorePlayer1 { get; private set; }
+        public int TotalScorePlayer2 { get; private set; }
+        public int RoundScorePlayer1 { get; private set; }
+        public int RoundScorePlayer2 { get; private set; }
 
         
-        public PlayerViewOfGameStateDTO(Game game , Player player)
+        public PlayerViewOfGameStateDTO(Game game , int playerId)
         {
             Id = game.Id;
-            Hand = player == game.Player1? game.HandPlayer1 : game.HandPlayer2;
-            NewHandCard = player == game.Player1 ? game.NewHandCardPlayer1 : game.NewHandCardPlayer2;
-            TopCard = game.CardStack.First();
+            Hand = playerId == game.Player1Id? game.HandPlayer1 : game.HandPlayer2;
+            NewHandCardId = playerId == game.Player1Id ? game.NewHandCardIdPlayer1 : game.NewHandCardIdPlayer2;
+            TopCardId = game.CardStack.First();
 
-            PlayedCardPlayer1 = game.PlayedCardPlayer1;
-            PlayedCardPlayer2 = game.PlayedCardPlayer2;
-            StartingPlayer = game.StartingPlayer;
-            TrickStartPlayer = game.TrickStartPlayer;
-            CurrentPlayer = game.CurrentPlayer;
+            PlayedCardIdPlayer1 = game.PlayedCardIdPlayer1;
+            PlayedCardIdPlayer2 = game.PlayedCardIdPlayer2;
+            StartingPlayerId = game.StartingPlayerId;
+            TrickStartPlayerId = game.TrickStartPlayerId;
+            CurrentPlayerId = game.CurrentPlayerId;
             TrumpSuit = game.TrumpSuit;
             TargetScore = game.TargetScore;
-            TotalScore = game.TotalScore;
-            RoundScore = game.RoundScore;
+            TotalScorePlayer1 = game.TotalScorePlayer1;
+            TotalScorePlayer2 = game.TotalScorePlayer2;
+            RoundScorePlayer1 = game.RoundScorePlayer1;
+            RoundScorePlayer2 = game.RoundScorePlayer2;
 
         }
     }

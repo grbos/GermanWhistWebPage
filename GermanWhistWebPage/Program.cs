@@ -1,4 +1,5 @@
 using GermanWhistWebPage.Models;
+using GermanWhistWebPage.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -10,11 +11,20 @@ builder.Services.AddControllers();
 
 // Change this to change database 
 builder.Services.AddDbContext<GameContext>(opt =>
-    opt.UseInMemoryDatabase("GermanWhist"));
+    {
+        opt.UseInMemoryDatabase("GermanWhist");
+        opt.EnableSensitiveDataLogging(true);
+    });
+
+builder.Services.AddScoped<CardService>();
+builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<GameService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
 
 var app = builder.Build();
 

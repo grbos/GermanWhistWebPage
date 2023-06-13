@@ -76,13 +76,13 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player player = _playerService.getUserPlayer();
+            int playerId = _playerService.getUserPlayerId();
 
-            return new PlayerViewOfGameStateDTO(game, player);
+            return new PlayerViewOfGameStateDTO(game, playerId);
         }
 
         [HttpPatch("{id}/game-state")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, Card card)
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, int cardId)
         {
             if (_context.Games == null)
             {
@@ -95,16 +95,17 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player player = _playerService.getUserPlayer();
+            int playerId = _playerService.getUserPlayerId();
+
             // Card card = _cardService.getCardFromId(cardId);
 
-            if (! _gameService.isValidMove(game, player, card))
+            if (! _gameService.isValidMove(game, playerId, cardId))
             {
                 return Forbid();
             }
-            _gameService.makeMove(game, player, card);    
+            _gameService.makeMove(game, playerId, cardId);    
             await _context.SaveChangesAsync();
-            return new PlayerViewOfGameStateDTO(game, player);
+            return new PlayerViewOfGameStateDTO(game, playerId);
         }
 
 
@@ -143,15 +144,17 @@ namespace GermanWhistWebPage.Controllers
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Game>> PostGame(int player1Id, int player2Id)
+        public async Task<ActionResult<Game>> PostGame( Player opponent)
         {
             if (_context.Games == null)
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
+            int userPlayerId = _playerService.getUserPlayerId();
+            Game game = _gameService.createGame(userPlayerId, opponent.Id);
 
-            Game game = _gameService.createGame(player1Id, player2Id);
-
+            //_context.Entry(userPlayer).State = EntityState.Unchanged;
+            //_context.Entry(opponent).State = EntityState.Unchanged;
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
