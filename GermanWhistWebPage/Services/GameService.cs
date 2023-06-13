@@ -12,13 +12,11 @@ namespace GermanWhistWebPage.Services
             return new Game();
         }
 
-        public bool isValidMove(Game game, Player player, int cardId) 
+        public bool isValidMove(Game game, Player player, Card card) 
         {
             return true;
         }
-
-
-        public void makeMove(Game game, Player player, int cardId) { }
+        public void makeMove(Game game, Player player, Card card) { }
 
 
     }

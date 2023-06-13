@@ -17,12 +17,15 @@ namespace GermanWhistWebPage.Controllers
         private readonly GameContext _context;
         private readonly PlayerService  _playerService;
         private readonly GameService _gameService;
+        private readonly CardService _cardService;
 
-        public GermanWhistController(GameContext context, PlayerService playerService, GameService gameService)
+        public GermanWhistController(GameContext context, PlayerService playerService, 
+            GameService gameService, CardService cardService)
         {
             _context = context;
             _playerService = playerService;
             _gameService = gameService;
+            _cardService = cardService;
         }
 
         // GET: api/Games
@@ -78,8 +81,8 @@ namespace GermanWhistWebPage.Controllers
             return new PlayerViewOfGameStateDTO(game, player);
         }
 
-        [HttpPut("{id}/game-state")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, int cardId)
+        [HttpPatch("{id}/game-state")]
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, Card card)
         {
             if (_context.Games == null)
             {
@@ -93,12 +96,14 @@ namespace GermanWhistWebPage.Controllers
             }
 
             Player player = _playerService.getUserPlayer();
+            // Card card = _cardService.getCardFromId(cardId);
 
-            if (! _gameService.isValidMove(game, player, cardId))
+            if (! _gameService.isValidMove(game, player, card))
             {
                 return Forbid();
             }
-            _gameService.makeMove(game, player, cardId);    
+            _gameService.makeMove(game, player, card);    
+            await _context.SaveChangesAsync();
             return new PlayerViewOfGameStateDTO(game, player);
         }
 
