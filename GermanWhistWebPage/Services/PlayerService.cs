@@ -4,10 +4,10 @@ namespace GermanWhistWebPage.Services
 {
     public class PlayerService
     {
-        public Player getUserPlayer() 
+        public int getUserPlayerId() 
         { 
             // TODO
-            return new Player();
+            return 123;
         }
     }
 }

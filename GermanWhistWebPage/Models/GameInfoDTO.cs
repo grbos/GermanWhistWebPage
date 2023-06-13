@@ -3,11 +3,11 @@
     public class GameInfoDTO
     {
         public int Id { get; private set; }
-        public Player Player1 { get; private set; }
-        public Player Player2 { get; private set; }
+        public int Player1Id { get; private set; }
+        public int Player2Id { get; private set; }
         public bool HasGameStarted {
             get {
-                if (Player1 != null && Player2 != null)
+                if (Player1Id != null && Player2Id != null)
                 {
                     return true;
                 }
@@ -17,8 +17,8 @@
         public GameInfoDTO(Game game)
         {
             Id = game.Id;
-            Player1 = game.Player1;
-            Player2 = game.Player2;
+            Player1Id = game.Player1Id;
+            Player2Id = game.Player2Id;
         }
     }
 }
