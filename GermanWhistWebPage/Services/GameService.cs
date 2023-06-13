@@ -17,6 +17,9 @@ namespace GermanWhistWebPage.Services
             return true;
         }
 
+
         public void makeMove(Game game, Player player, int cardId) { }
+
+
     }
 }
