@@ -4,10 +4,12 @@ namespace GermanWhistWebPage.Services
 {
     public class PlayerService
     {
-        public int getUserPlayerId() 
-        { 
+        public Player GetUserPlayer(GameContext gameContext)
+        {
             // TODO
-            return 123;
+            int testPlayerId = 1;
+            var p = gameContext.Players.Find(testPlayerId);
+            return p;
         }
     }
 }

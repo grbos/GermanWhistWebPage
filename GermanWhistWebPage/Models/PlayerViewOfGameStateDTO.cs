@@ -26,12 +26,14 @@ namespace GermanWhistWebPage.Models
         public int TotalScorePlayer2 { get; private set; }
         public int RoundScorePlayer1 { get; private set; }
         public int RoundScorePlayer2 { get; private set; }
-
         
-        public PlayerViewOfGameStateDTO(Game game , int playerId)
+        public ICollection<int> ValidMoves { get; private set; }
+
+
+        public PlayerViewOfGameStateDTO(Game game , int playerId, ICollection<int> validMoves)
         {
             Id = game.Id;
-            Hand = playerId == game.Player1Id? game.HandPlayer1 : game.HandPlayer2;
+            Hand = playerId == game.Player1Id ? game.HandPlayer1 : game.HandPlayer2;
             NewHandCardId = playerId == game.Player1Id ? game.NewHandCardIdPlayer1 : game.NewHandCardIdPlayer2;
             TopCardId = game.CardStack.First();
 
@@ -46,7 +48,7 @@ namespace GermanWhistWebPage.Models
             TotalScorePlayer2 = game.TotalScorePlayer2;
             RoundScorePlayer1 = game.RoundScorePlayer1;
             RoundScorePlayer2 = game.RoundScorePlayer2;
-
+            ValidMoves = validMoves;
         }
     }
 }

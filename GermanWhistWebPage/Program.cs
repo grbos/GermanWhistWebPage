@@ -9,11 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+
+var folder = Environment.SpecialFolder.LocalApplicationData;
+var path = Environment.GetFolderPath(folder);
+String SqliteDbPath = Path.Join(path, "GermanWhist.db");
+
+
 // Change this to change database 
 builder.Services.AddDbContext<GameContext>(opt =>
     {
-        opt.UseInMemoryDatabase("GermanWhist");
-        opt.EnableSensitiveDataLogging(true);
+        opt.UseSqlite($"Data Source={SqliteDbPath}");
     });
 
 builder.Services.AddScoped<CardService>();

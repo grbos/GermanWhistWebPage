@@ -8,20 +8,29 @@ namespace GermanWhistWebPage.Models
     {
         public int Id { get; set; }
         public int Player1Id { get; set; }
+        [ForeignKey("Player1Id")]
+        public Player Player1 { get; set; }
         public int Player2Id { get; set; }
+        [ForeignKey("Player2Id")]
+        public Player Player2 { get; set; }
 
         // public GameState GameState { get; set; }
 
         public ICollection<int> CardStack { get; set; }
 
-        public ICollection<int> HandPlayer1 { get; set; }
+        public List<int> HandPlayer1 { get; set; }
 
-        public ICollection<int> HandPlayer2 { get; set; }
+        public List<int> HandPlayer2 { get; set; }
         public int? NewHandCardIdPlayer1 { get; set; }
         public int? NewHandCardIdPlayer2 { get; set; }
 
         public int? PlayedCardIdPlayer1 { get; set; }
         public int? PlayedCardIdPlayer2 { get; set; }
+
+        public int? PreviousPlayedCardIdPlayer1 { get; set; }
+        public int? PreviousPlayedCardIdPlayer2 { get; set; }
+        
+        public int? TrickWiningPlayerPreviousRound { get; set; }
 
 
         public int StartingPlayerId { get; set; }
@@ -44,12 +53,22 @@ namespace GermanWhistWebPage.Models
                     return HandPlayer2;
             } 
         }
-        public bool isEndOfTrick { get
+        public bool IsEndOfTrick { get
             {
                 if (PlayedCardIdPlayer1 == null || PlayedCardIdPlayer2 == null)
                     return false;
                 return true;
             } 
+        }
+
+        public bool IsEndOfRound
+        {
+            get
+            {
+                if (HandPlayer1.Count() == 0 && HandPlayer1.Count() == 0)
+                    return true;
+                return false;
+            }
         }
     }
 }

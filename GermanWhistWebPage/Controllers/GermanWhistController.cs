@@ -63,7 +63,7 @@ namespace GermanWhistWebPage.Controllers
         }
 
         [HttpGet("{id}/game-state")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetGameState(int id)
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetGameState(int id, int PlayerId)
         {
             if (_context.Games == null)
             {
@@ -76,15 +76,19 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            int playerId = _playerService.getUserPlayerId();
+            Player player = _context.Players.Find(PlayerId);
+            if (player == null)
+            {
+                return NotFound();
+            }
 
-            return new PlayerViewOfGameStateDTO(game, playerId);
+            return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, PlayerId));
         }
 
         [HttpPatch("{id}/game-state")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, int cardId)
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, MoveDTO move)
         {
-            if (_context.Games == null)
+            if (_context.Games == null || _context.Players == null)
             {
                 return NotFound();
             }
@@ -95,17 +99,21 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            int playerId = _playerService.getUserPlayerId();
+            Player player = await _context.Players.FindAsync(move.PlayerId);
+            if (player == null)
+            {
+                return NotFound();
+            }
 
             // Card card = _cardService.getCardFromId(cardId);
 
-            if (! _gameService.isValidMove(game, playerId, cardId))
+            if (! _gameService.isValidMove(game, player.Id, move.CardId))
             {
-                return Forbid();
+                return BadRequest();
             }
-            _gameService.makeMove(game, playerId, cardId);    
+            _gameService.makeMove(game, player.Id, move.CardId);    
             await _context.SaveChangesAsync();
-            return new PlayerViewOfGameStateDTO(game, playerId);
+            return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
 
 
@@ -144,14 +152,20 @@ namespace GermanWhistWebPage.Controllers
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Game>> PostGame( Player opponent)
+        public async Task<ActionResult<GameInfoDTO>> PostGame([FromBody] PlayerInfoDTO playerInfo)
         {
             if (_context.Games == null)
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
-            int userPlayerId = _playerService.getUserPlayerId();
-            Game game = _gameService.createGame(userPlayerId, opponent.Id);
+            Player player1 = await _context.Players.FindAsync(playerInfo.Player1Id);
+            Player player2 = await _context.Players.FindAsync(playerInfo.Player2Id);
+            if (player1 == null || player2 == null)
+            {
+                return NotFound();
+            }
+
+            Game game = _gameService.createGame(player1.Id, player2.Id);
 
             //_context.Entry(userPlayer).State = EntityState.Unchanged;
             //_context.Entry(opponent).State = EntityState.Unchanged;
@@ -159,7 +173,7 @@ namespace GermanWhistWebPage.Controllers
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetGame", new { id = game.Id }, game);
+            return CreatedAtAction("GetGame", new { id = game.Id }, new GameInfoDTO(game));
         }
 
         // DELETE: api/Games/5

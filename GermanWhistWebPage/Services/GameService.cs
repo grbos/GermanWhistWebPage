@@ -52,7 +52,7 @@ namespace GermanWhistWebPage.Services
             if (game.CurrentPlayerId != playerId)
                 return false;
 
-            ICollection<int> validMoves = getValidMoves(game);
+            ICollection<int> validMoves = getValidMoves(game, playerId);
             return validMoves.Contains(cardId);
         }
 
@@ -66,8 +66,12 @@ namespace GermanWhistWebPage.Services
         }
 
     
-    private ICollection<int> getValidMoves(Game game)
+        public ICollection<int> getValidMoves(Game game, int PlayerId)
         {
+            if(PlayerId != game.CurrentPlayerId)
+            {
+                return new List<int>();
+            }
             Suit? leadCardSuit = getLeadCardSuit(game);
             if (leadCardSuit == null || !game.HandCurrentPlayer.Any(cardId => _cardService.getCardFromId(cardId).Suit == leadCardSuit))
                 return game.HandCurrentPlayer;
@@ -94,21 +98,31 @@ namespace GermanWhistWebPage.Services
         private void ProcessGameUntilNextInput(Game game)
         {
             int nextPlayerId;
-            if (!game.isEndOfTrick) 
+            if (!game.IsEndOfTrick) 
             {
                 nextPlayerId = game.CurrentPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
-                return;
             }
             else
             {
                 int winningPlayerId = get_trick_winner(game);
                 evaluateTrick(game, winningPlayerId);
+                game.PreviousPlayedCardIdPlayer1 = game.PlayedCardIdPlayer1;
+                game.PreviousPlayedCardIdPlayer2 = game.PlayedCardIdPlayer2;
                 game.PlayedCardIdPlayer1 = null;
                 game.PlayedCardIdPlayer2 = null;
                 nextPlayerId = winningPlayerId;
                 game.TrickStartPlayerId = nextPlayerId;
+                game.TrickWiningPlayerPreviousRound = winningPlayerId;
             }
-            game.CurrentPlayerId = nextPlayerId;
+            if (game.isEndOfRound)
+            {
+
+            }
+            else
+            {
+                game.CurrentPlayerId = nextPlayerId;
+            }
+            
         }
 
         private void evaluateTrick(Game game, int winningPlayerId) 
@@ -118,20 +132,28 @@ namespace GermanWhistWebPage.Services
                 if(winningPlayerId == game.Player1Id)
                 {
                     game.HandPlayer1.Add(game.CardStack.First());
+                    game.NewHandCardIdPlayer1 = game.CardStack.First();
                     game.CardStack.Remove(game.CardStack.First());
+
                     game.HandPlayer2.Add(game.CardStack.First());
+                    game.NewHandCardIdPlayer2 = game.CardStack.First();
                     game.CardStack.Remove(game.CardStack.First());
                 }
                 else
                 {
                     game.HandPlayer2.Add(game.CardStack.First());
+                    game.NewHandCardIdPlayer2 = game.CardStack.First();
                     game.CardStack.Remove(game.CardStack.First());
+
                     game.HandPlayer1.Add(game.CardStack.First());
+                    game.NewHandCardIdPlayer1 = game.CardStack.First();
                     game.CardStack.Remove(game.CardStack.First());
                 }
             }
             else
             {
+                game.NewHandCardIdPlayer1 = null;
+                game.NewHandCardIdPlayer2 = null;
                 if (winningPlayerId == game.Player1Id)
                 {
                     game.TotalScorePlayer1++;
