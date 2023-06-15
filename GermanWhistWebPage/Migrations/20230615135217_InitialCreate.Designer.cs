@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GermanWhistWebPage.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20230614121721_InitialCreate")]
+    [Migration("20230615135217_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -59,6 +59,12 @@ namespace GermanWhistWebPage.Migrations
                     b.Property<int>("Player2Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PreviousPlayedCardIdPlayer1")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PreviousPlayedCardIdPlayer2")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("RoundScorePlayer1")
                         .HasColumnType("INTEGER");
 
@@ -78,6 +84,9 @@ namespace GermanWhistWebPage.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TrickStartPlayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TrickWiningPlayerPreviousRound")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TrumpSuit")

@@ -11,13 +11,13 @@ namespace GermanWhistWebPage.Services
 
         private readonly CardService _cardService;
 
-        public GameService(CardService cardService) 
+        public GameService(CardService cardService)
         {
             _cardService = cardService;
         }
         public void deleteGame(Game game) { }
 
-        public Game createGame(int player1Id, int player2Id) 
+        public Game createGame(int player1Id, int player2Id)
         {
 
             List<int> shuffledCards = _cardService.GetShuffeledCards();
@@ -30,7 +30,7 @@ namespace GermanWhistWebPage.Services
                 CardStack = cardStack,
                 HandPlayer1 = shuffledCards.Take(_nCardsPerPlayer).ToList(),
                 HandPlayer2 = shuffledCards.Skip(_nCardsPerPlayer).Take(_nCardsPerPlayer).ToList(),
-                
+
                 StartingPlayerId = player1Id,
                 TrickStartPlayerId = player1Id,
                 CurrentPlayerId = player1Id,
@@ -45,7 +45,7 @@ namespace GermanWhistWebPage.Services
             };
         }
 
-        public bool isValidMove(Game game, int playerId, int cardId) 
+        public bool isValidMove(Game game, int playerId, int cardId)
         {
             if (game == null) return false;
 
@@ -65,10 +65,10 @@ namespace GermanWhistWebPage.Services
             return card.Suit;
         }
 
-    
+
         public ICollection<int> getValidMoves(Game game, int PlayerId)
         {
-            if(PlayerId != game.CurrentPlayerId)
+            if (PlayerId != game.CurrentPlayerId)
             {
                 return new List<int>();
             }
@@ -76,13 +76,27 @@ namespace GermanWhistWebPage.Services
             if (leadCardSuit == null || !game.HandCurrentPlayer.Any(cardId => _cardService.getCardFromId(cardId).Suit == leadCardSuit))
                 return game.HandCurrentPlayer;
 
-            return game.HandCurrentPlayer.Where(cardId => (_cardService.getCardFromId(cardId).Suit == leadCardSuit || 
+            return game.HandCurrentPlayer.Where(cardId => (_cardService.getCardFromId(cardId).Suit == leadCardSuit ||
                 _cardService.getCardFromId(cardId).Suit == game.TrumpSuit)).ToList();
         }
 
-        public void makeMove(Game game, int playerId, int cardId) 
+        public void makeMove(Game game, int playerId, int cardId)
         {
-            if(playerId == game.Player1Id)
+            if (!(game.Player1Id == playerId) && !(game.Player2Id == playerId))
+            {
+                throw new ArgumentException("Player not playing this game", nameof(playerId));
+            }
+            if (!(game.CurrentPlayerId == playerId))
+            {
+                throw new ArgumentException("Currently not this players turn", nameof(playerId));
+            }
+            if (!isValidMove(game, playerId, cardId))
+            {
+                throw new ArgumentException("This is not a valid card", nameof(cardId));
+            }
+
+
+            if (playerId == game.Player1Id)
             {
                 game.PlayedCardIdPlayer1 = cardId;
                 game.HandPlayer1.Remove(cardId);
@@ -98,7 +112,7 @@ namespace GermanWhistWebPage.Services
         private void ProcessGameUntilNextInput(Game game)
         {
             int nextPlayerId;
-            if (!game.IsEndOfTrick) 
+            if (!game.IsEndOfTrick)
             {
                 nextPlayerId = game.CurrentPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
             }
@@ -116,21 +130,32 @@ namespace GermanWhistWebPage.Services
             }
             if (game.IsEndOfRound)
             {
-                //TODO
-                // start new round
+                List<int> shuffledCards = _cardService.GetShuffeledCards();
+                var cardStack = shuffledCards.Skip(2 * _nCardsPerPlayer).ToList();
+
+                int nextStartPlayerId = game.StartingPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
+                game.CardStack = cardStack;
+                game.HandPlayer1 = shuffledCards.Take(_nCardsPerPlayer).ToList();
+                game.HandPlayer2 = shuffledCards.Skip(_nCardsPerPlayer).Take(_nCardsPerPlayer).ToList();
+
+                game.StartingPlayerId = nextStartPlayerId;
+                game.TrickStartPlayerId = nextStartPlayerId;
+                game.CurrentPlayerId = nextStartPlayerId;
+
+                game.TrumpSuit = _cardService.getCardFromId(cardStack.First()).Suit;
             }
             else
             {
                 game.CurrentPlayerId = nextPlayerId;
             }
-            
+
         }
 
-        private void evaluateTrick(Game game, int winningPlayerId) 
+        private void evaluateTrick(Game game, int winningPlayerId)
         {
             if (game.CardStack.Count() > 0)
             {
-                if(winningPlayerId == game.Player1Id)
+                if (winningPlayerId == game.Player1Id)
                 {
                     game.HandPlayer1.Add(game.CardStack.First());
                     game.NewHandCardIdPlayer1 = game.CardStack.First();

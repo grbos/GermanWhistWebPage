@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 
 var folder = Environment.SpecialFolder.LocalApplicationData;
 var path = Environment.GetFolderPath(folder);
-String SqliteDbPath = Path.Join(path, "GermanWhist.db");
+String SqliteDbPath = Path.Join("GermanWhist.db");
 
 
 // Change this to change database 

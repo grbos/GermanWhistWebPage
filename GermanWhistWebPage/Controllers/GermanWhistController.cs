@@ -62,8 +62,8 @@ namespace GermanWhistWebPage.Controllers
             return new GameInfoDTO(game);
         }
 
-        [HttpGet("{id}/game-state")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetGameState(int id, int PlayerId)
+        [HttpGet("{id}/player-view")]
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetPlayerView(int id, int PlayerId)
         {
             if (_context.Games == null)
             {
@@ -85,7 +85,23 @@ namespace GermanWhistWebPage.Controllers
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, PlayerId));
         }
 
-        [HttpPatch("{id}/game-state")]
+        [HttpGet("{id}/game-state")]
+        public async Task<ActionResult<Game>> GetGameState(int id)
+        {
+            if (_context.Games == null)
+            {
+                return NotFound();
+            }
+            var game = await _context.Games.FindAsync(id);
+
+            if (game == null)
+            {
+                return NotFound();
+            }
+            return game;
+        }
+
+        [HttpPost("{id}/move")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, MoveDTO move)
         {
             if (_context.Games == null || _context.Players == null)
@@ -105,49 +121,18 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            // Card card = _cardService.getCardFromId(cardId);
-
-            if (! _gameService.isValidMove(game, player.Id, move.CardId))
+            try
             {
-                return BadRequest();
+                _gameService.makeMove(game, player.Id, move.CardId);
             }
-            _gameService.makeMove(game, player.Id, move.CardId);    
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
             await _context.SaveChangesAsync();
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
-
-
-
-        //// PUT: api/Games/5
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutGame(int id, Game game)
-        //{
-        //    if (id != game.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _context.Entry(game).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!GameExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
 
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -166,9 +151,6 @@ namespace GermanWhistWebPage.Controllers
             }
 
             Game game = _gameService.createGame(player1.Id, player2.Id);
-
-            //_context.Entry(userPlayer).State = EntityState.Unchanged;
-            //_context.Entry(opponent).State = EntityState.Unchanged;
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();

@@ -56,6 +56,12 @@ namespace GermanWhistWebPage.Migrations
                     b.Property<int>("Player2Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PreviousPlayedCardIdPlayer1")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PreviousPlayedCardIdPlayer2")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("RoundScorePlayer1")
                         .HasColumnType("INTEGER");
 
@@ -75,6 +81,9 @@ namespace GermanWhistWebPage.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TrickStartPlayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TrickWiningPlayerPreviousRound")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TrumpSuit")

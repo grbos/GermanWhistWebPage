@@ -70,5 +70,15 @@ namespace GermanWhistWebPage.Models
                 return false;
             }
         }
+
+        public bool HasGameEnded
+        {
+            get
+            {
+                if (TotalScorePlayer1 >= TargetScore || TotalScorePlayer2 >= TargetScore)
+                    return true;
+                return false;
+            }
+        }
     }
 }
