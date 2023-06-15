@@ -1,0 +1,58 @@
+.opponent-hand-card {
+    height: 120px;
+    transform: scale(1, 1.07014519);
+}
+
+.played-card-container {
+    height: 200px;
+    position: relative;
+}
+
+.top-card {
+    height: 160px;
+}
+
+#trump-indicator-container {
+    height: 100px;
+}
+
+.winning-played-card {
+    border: 5px solid green;
+    border-radius: 10px;
+}
+
+
+
+@keyframes fadeBorder {
+    0% {
+        border-color: blue;
+    }
+
+    100% {
+        border-color: transparent;
+    }
+}
+
+.player-hand-card {
+    height: 120px;
+    border: 3px solid transparent;
+}
+
+.new-hand-card {
+    border: 3px solid blue;
+    animation: fadeBorder 3s linear forwards;
+    border-radius: 5px;
+}
+
+.not-valid-move {
+    filter: brightness(60%);
+}
+
+.valid-move:hover {
+    border: 3px solid yellow !important;
+    border-radius: 5px;
+}
+
+#remove-cards-button-container{
+    height:  40px;
+}

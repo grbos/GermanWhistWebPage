@@ -42,6 +42,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// used for static files in HTTP page
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+
+
 app.UseAuthorization();
 
 app.MapControllers();
