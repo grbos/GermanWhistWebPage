@@ -114,9 +114,10 @@ namespace GermanWhistWebPage.Services
                 game.TrickStartPlayerId = nextPlayerId;
                 game.TrickWiningPlayerPreviousRound = winningPlayerId;
             }
-            if (game.isEndOfRound)
+            if (game.IsEndOfRound)
             {
-
+                //TODO
+                // start new round
             }
             else
             {
