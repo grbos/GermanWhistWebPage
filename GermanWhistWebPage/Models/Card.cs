@@ -7,10 +7,12 @@
             Id = id;
             Suit = suit;
             Number = number;
+            SuitName = Suit.ToString();
         }
 
         public int Id { get; private set; }
         public Suit Suit { get; private set; }
+        public string SuitName { get; private set; }
         public int Number { get; private set; }
         public string Name { get 
             {
@@ -25,7 +27,7 @@
                 return Number.ToString();
             } 
         }
-
+        
         public override bool Equals(object? obj)
         {
             var card = obj as Card;
