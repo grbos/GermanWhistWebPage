@@ -1,3 +1,5 @@
+"use strict"
+
 class Drawer {
     constructor() { }
 
@@ -20,6 +22,7 @@ class Drawer {
             gameController.deleteGameState()
             window.location.href = "/";
         }
+        document.getElementById("changePlayerButton").innerHTML = `Change View to Player ${opponentPlayerId}`
         this.drawOpponentCards();
         this.drawUserCards();
         this.drawStackTopCardAndRoundScore();
@@ -32,7 +35,7 @@ class Drawer {
         var cardBackImage = []
         for (let i = 0; i < gameState.numberOfHandCardsOpponent; i++) {
             var img = document.createElement("img");
-            img.src = staticURL + "back.svg";
+            img.src = "/back.svg";
             img.classList.add("opponent-hand-card");
             cardBackImage.push(img)
         }
@@ -41,7 +44,7 @@ class Drawer {
     }
 
     drawUserCards() {
-        var playerHand = gameState.playerHandCardIdList;
+        var playerHand = gameState.hand;
 
         var cardImages = [];
         for (let i = playerHand.length - 1; i >= 0; i--) {
@@ -53,7 +56,7 @@ class Drawer {
             if (card.id == gameState.playersNewCardId) {
                 img.classList.add("new-hand-card");
             }
-            if (gameState.currentPlayer === userPlayerId) {
+            if (gameState.currentPlayer === currentViewPlayerId) {
                 if (gameState.validPlayerMoveIds.includes(card.id)) {
                     img.classList.add("valid-move")
                     img.addEventListener("click", (event) => this.gameController.userClicksCard(event))
@@ -69,8 +72,8 @@ class Drawer {
     }
 
     drawStackTopCardAndRoundScore() {
-        var topCard = gameState.stackTopCardId;
-        if (gameState.stackTopCardId === null) {
+        var topCard = gameState.topCardId;
+        if (gameState.topCardId === null) {
             document.getElementById("top-card-container").innerHTML = "";
             var textContainer = document.getElementById("top-card-and-round-score-text");
 
@@ -78,7 +81,7 @@ class Drawer {
             textContainer.innerHTML = "Round Score: " + roundScore[0] + ":" + roundScore[1]
         }
         else {
-            topCard = cardsList[gameState.stackTopCardId]
+            let topCard = cardsList[gameState.topCardId];
             var img = document.createElement("img");
             img.src = staticURL + topCard.fileName;
             img.classList.add("top-card")
@@ -103,15 +106,13 @@ class Drawer {
     }
 
     drawPlayedCards() {
-        var playedCards = gameState.playedCardIds;
-
         let trickWinner = gameState.trickWinner;
 
         this.fillContainerWithPlayedCard("player-played-card-container",
-            playedCards[userPlayerId],
-            trickWinner === userPlayerId);
+            gameState.playedCardIdPlayer,
+            trickWinner === currentViewPlayerId);
         this.fillContainerWithPlayedCard("opponent-played-card-container",
-            playedCards[opponentPlayerId],
+            gameState.playedCardIdOpponent,
             trickWinner === opponentPlayerId);
 
         let removeButtonContainerId = "remove-cards-button-container"
@@ -131,16 +132,15 @@ class Drawer {
     }
 
     drawTrumpColor() {
-        var trumpColor = gameState.trumpColor;
         var img = document.createElement("img");
-        img.src = staticURL + trumpColor + ".PNG";
+        img.src = staticURL + gameState.trumpSuitName.toLowerCase() + ".PNG";
         document.getElementById("trump-indicator-container").replaceChildren(img);
     }
 
     drawTotalScore() {
         var totalScore = gameState.totalScores;
-        document.getElementById("player-score").innerHTML = totalScore[0];
-        document.getElementById("opponent-score").innerHTML = totalScore[1];
+        document.getElementById("player-score").innerHTML = gameState.totalScorePlayer;
+        document.getElementById("opponent-score").innerHTML = gameState.totalScoreOpponent;
         document.getElementById("target-score").innerHTML = gameState.targetScore;
     }
 
@@ -183,9 +183,9 @@ class GameController {
         this.drawer.drawGameState();
     }
 
-    async getNewGameState() {
+    async getPlayerView() {
         try {
-            const response = await fetch(`/games/german-whist/game-states/${gameStateId}`, {
+            const response = await fetch(`/api/games/GermanWhist/${gameId}/player-view/?PlayerId=${currentViewPlayerId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -198,6 +198,26 @@ class GameController {
             const gameState = await response.json();
             console.log("Card played:", gameState);
             return gameState
+        } catch (error) {
+            console.error("There was a problem with the fetch operation:", error);
+        }
+    }
+
+    async getCardsList() {
+        try {
+            const response = await fetch(`/api/games/GermanWhist/Cards`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            const cardsList = await response.json();
+            console.log("Card played:", cardsList);
+            return cardsList
         } catch (error) {
             console.error("There was a problem with the fetch operation:", error);
         }
@@ -221,26 +241,55 @@ class GameController {
     }
 
     async removeCards() {
-        gameState = await this.getNewGameState();
+        gameState = await this.getPlayerView();
         this.drawer.drawGameState();
     }
 
 }
 
-
-async function goToMenu() {
-    window.location.href = "/";
+function addFileNamesToCards(cardsList)
+{
+    for (let i = 0; i < cardsList.length; i++) {
+        let card = cardsList[i];
+        card.fileName = "/cards/" + card.name + "_of_" + card.suitName.toLowerCase() + ".svg"
+        cardsList[i] = card;
+    }
 }
 
-const userPlayerId = 0;
-const opponentPlayerId = 1;
+async function changePlayer() {
+    if (currentViewPlayerId == player1Id) {
+        currentViewPlayerId = player2Id;
+        opponentPlayerId = player1Id;
+    }
+    else {
+        currentViewPlayerId = player1Id;
+        opponentPlayerId = player2Id;
+    }
+
+    gameState = await gameController.getPlayerView();
+    drawer.drawGameState()
+}
+
+const gameId = 1;
+const player1Id = 1;
+const player2Id = 2;
+
+var currentViewPlayerId = player1Id;
+var opponentPlayerId = player2Id;
+
+var gameState;
+var cardsList;
+
 var gameController = new GameController();
 var drawer = new Drawer();
 gameController.setDrawer(drawer);
 drawer.setGameController(gameController);
 
-document.addEventListener("DOMContentLoaded", (event) => {
+document.addEventListener("DOMContentLoaded", async (event) => {
+    gameState = await gameController.getPlayerView();
+    cardsList = await gameController.getCardsList(); 
+    addFileNamesToCards(cardsList);
     drawer.drawGameState()
-    document.getElementById("menu-button").addEventListener("click", goToMenu)
+    document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
 })
 
