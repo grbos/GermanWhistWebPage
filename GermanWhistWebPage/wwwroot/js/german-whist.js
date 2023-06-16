@@ -22,7 +22,7 @@ class Drawer {
             gameController.deleteGameState()
             window.location.href = "/";
         }
-        document.getElementById("changePlayerButton").innerHTML = `Change View to Player ${opponentPlayerId}`
+        document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`
         this.drawOpponentCards();
         this.drawUserCards();
         this.drawStackTopCardAndRoundScore();
@@ -53,11 +53,11 @@ class Drawer {
             img.src = staticURL + card.fileName;
             img.setAttribute("card-id", card.id);
             img.classList.add("player-hand-card");
-            if (card.id == gameState.playersNewCardId) {
+            if (card.id == gameState.newHandCardId) {
                 img.classList.add("new-hand-card");
             }
-            if (gameState.currentPlayer === currentViewPlayerId) {
-                if (gameState.validPlayerMoveIds.includes(card.id)) {
+            if (gameState.currentPlayerId === currentViewPlayerId) {
+                if (gameState.validMoves.includes(card.id)) {
                     img.classList.add("valid-move")
                     img.addEventListener("click", (event) => this.gameController.userClicksCard(event))
                 }
@@ -116,6 +116,9 @@ class Drawer {
             trickWinner === opponentPlayerId);
 
         let removeButtonContainerId = "remove-cards-button-container"
+
+        
+
         if (gameState.cardsCanBeRemoved) {
             let button = document.createElement("button");
             button.id = "remove-cards-button"
@@ -128,6 +131,13 @@ class Drawer {
         else {
 
             document.getElementById(removeButtonContainerId).replaceChildren([]);
+
+            if (gameState.currentPlayerId != currentViewPlayerId) {
+                document.getElementById(removeButtonContainerId).innerHTML = "Waiting for other Player";
+            }
+            else {
+                document.getElementById(removeButtonContainerId).innerHTML = "";
+            }
         }
     }
 
@@ -156,12 +166,16 @@ class GameController {
 
     async playCard(cardId) {
         try {
-            const response = await fetch(`/games/german-whist/game-states/${gameStateId}/played-cards`, {
-                method: "PUT",
+            let bdy = JSON.stringify({
+                playerId: currentViewPlayerId,
+                cardId: cardId
+            })                        
+            const response = await fetch(`/api/games/GermanWhist/${gameId}/move`, {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ "cardId": cardId },)
+                body: bdy
             });
 
             if (!response.ok) {
@@ -179,7 +193,7 @@ class GameController {
     async userClicksCard(event) {
         console.log("Card clicked");
         var clickedCardId = event.target.getAttribute("card-id");
-        gameState = await this.playCard(clickedCardId);
+        gameState = await this.playCard(parseInt(clickedCardId));
         this.drawer.drawGameState();
     }
 
@@ -247,8 +261,7 @@ class GameController {
 
 }
 
-function addFileNamesToCards(cardsList)
-{
+function addFileNamesToCards(cardsList) {
     for (let i = 0; i < cardsList.length; i++) {
         let card = cardsList[i];
         card.fileName = "/cards/" + card.name + "_of_" + card.suitName.toLowerCase() + ".svg"
@@ -287,7 +300,7 @@ drawer.setGameController(gameController);
 
 document.addEventListener("DOMContentLoaded", async (event) => {
     gameState = await gameController.getPlayerView();
-    cardsList = await gameController.getCardsList(); 
+    cardsList = await gameController.getCardsList();
     addFileNamesToCards(cardsList);
     drawer.drawGameState()
     document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
