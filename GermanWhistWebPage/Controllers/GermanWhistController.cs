@@ -178,6 +178,14 @@ namespace GermanWhistWebPage.Controllers
             return NoContent();
         }
 
+        // GET: api/GermanWhist/Cards
+        [HttpGet("Cards")]
+        public async Task<ActionResult<IEnumerable<Card>>> GetCards()
+        {
+            
+            return _cardService.Cards;
+        }
+
         private bool GameExists(int id)
         {
             return (_context.Games?.Any(e => e.Id == id)).GetValueOrDefault();
