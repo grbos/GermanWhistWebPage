@@ -10,17 +10,13 @@ class Drawer {
     drawGameState() {
         if (gameState.hasGameEnded) {
             var scores = gameState.totalScores;
-            if (scores[0] > scores[1]) {
-                alert("Congratulations, you won " + scores[0] + " to " + scores[1]);
+            if (gameState.totalScorePlayer > gameState.totalScoreOpponent) {
+                alert("Congratulations, you won " + gameState.totalScorePlayer + " to " + gameState.totalScoreOpponent);
             }
-            if (scores[0] < scores[1]) {
-                alert("You lost " + scores[0] + " to " + scores[1]);
+            else {
+                alert("You lost " + gameState.totalScorePlayer + " to " + gameState.totalScoreOpponent);
             }
-            if (scores[0] == scores[1]) {
-                alert("You played to a draw: " + scores[0] + " to " + scores[1]);
-            }
-            gameController.deleteGameState()
-            window.location.href = "/";
+            // gameController.deleteGameState()
         }
         document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`
         this.drawOpponentCards();
@@ -29,6 +25,7 @@ class Drawer {
         this.drawPlayedCards();
         this.drawTrumpColor();
         this.drawTotalScore();
+        this.drawNewGameButton();
     }
 
     drawOpponentCards() {
@@ -78,7 +75,7 @@ class Drawer {
             var textContainer = document.getElementById("top-card-and-round-score-text");
 
             var roundScore = gameState.roundScores;
-            textContainer.innerHTML = "Round Score: " + roundScore[0] + ":" + roundScore[1]
+            textContainer.innerHTML = "Round Score: " + gameState.totalScorePlayer + ":" + gameState.totalScoreOpponent;
         }
         else {
             let topCard = cardsList[gameState.topCardId];
@@ -154,6 +151,11 @@ class Drawer {
         document.getElementById("target-score").innerHTML = gameState.targetScore;
     }
 
+    drawNewGameButton() {
+        document.getElementById("newGameButton").innerHTML = "Start new Game (Current Game id = " + gameState.id + ")";
+
+    }
+
 }
 
 
@@ -167,22 +169,21 @@ class GameController {
     }
 
     async playCard(cardId) {
-        try {
-            let bdy = JSON.stringify({
-                playerId: currentViewPlayerId,
-                cardId: cardId
-            })                        
+        try {                   
             const response = await fetch(`/api/games/GermanWhist/${gameId}/move`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: bdy
+                body: JSON.stringify({
+                    playerId: currentViewPlayerId,
+                    cardId: cardId
+                })         
             });
 
             if (!response.ok) {
                 throw new Error("Network response was not ok");
-                console.log("Network error response:", await response.json(););
+                console.log("Network error response:", await response.json());
             }
 
             const gameState = await response.json();
@@ -241,7 +242,7 @@ class GameController {
 
     async deleteGameState() {
         try {
-            const response = await fetch(`/games/german-whist/game-states/${gameStateId}`, {
+            const response = await fetch(`/api/games/GermanWhist/${gameStateId}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -267,7 +268,32 @@ class GameController {
             gameState = await this.getPlayerView();
             drawer.drawGameState();
         }
-}
+    }
+
+    async startNewGame() {
+        try {
+            const response = await fetch(`/api/games/GermanWhist`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    player1Id : player1Id,
+                    player2Id : player2Id
+                })         
+
+            });
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            const newGame = await response.json();
+            console.log("New Game Started:", gameState);
+            return gameState
+        } catch (error) {
+            console.error("There was a problem with the delete operation:", error);
+        }
+    }
 
 }
 
@@ -289,6 +315,13 @@ async function changePlayer() {
         opponentPlayerId = player2Id;
     }
 
+    gameState = await gameController.getPlayerView();
+    drawer.drawGameState()
+}
+
+async function startNewGame() {
+    newGame = await gameController.startNewGame()
+    gameId = newGame.id;
     gameState = await gameController.getPlayerView();
     drawer.drawGameState()
 }
@@ -316,6 +349,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     addFileNamesToCards(cardsList);
     drawer.drawGameState()
     document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
+    document.getElementById("newGameButton").addEventListener("click", startNewGame)
     gameController.pollGameState()
 })
 

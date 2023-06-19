@@ -11,7 +11,7 @@ namespace GermanWhistWebPage.Models
 
         public int NumberOfHandCardsOpponent { get; private set; }
 
-        public int TopCardId { get; private set; }
+        public int? TopCardId { get; private set; }
 
         public int? PlayedCardIdPlayer { get; private set; }
         public int? PlayedCardIdOpponent { get; private set; }
@@ -38,7 +38,7 @@ namespace GermanWhistWebPage.Models
             Id = game.Id;
             Hand = playerId == game.Player1Id ? game.HandPlayer1 : game.HandPlayer2;
             NewHandCardId = playerId == game.Player1Id ? game.NewHandCardIdPlayer1 : game.NewHandCardIdPlayer2;
-            TopCardId = game.CardStack.First();
+            TopCardId = game.CardStack.Count() > 0 ? game.CardStack.First() : null;
 
             PlayedCardIdPlayer = playerId == game.Player1Id ? game.PlayedCardIdPlayer1 : game.PlayedCardIdPlayer2;
             PlayedCardIdOpponent = playerId == game.Player1Id ? game.PlayedCardIdPlayer2 : game.PlayedCardIdPlayer1;
