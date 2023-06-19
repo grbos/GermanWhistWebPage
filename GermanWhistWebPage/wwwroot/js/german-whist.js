@@ -19,13 +19,14 @@ class Drawer {
             // gameController.deleteGameState()
         }
         document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`
+        document.getElementById("newGameButton").innerHTML = "Start new Game (Current Game id = " + gameState.id + ")";
         this.drawOpponentCards();
         this.drawUserCards();
         this.drawStackTopCardAndRoundScore();
         this.drawPlayedCards();
         this.drawTrumpColor();
         this.drawTotalScore();
-        this.drawNewGameButton();
+
     }
 
     drawOpponentCards() {
@@ -53,7 +54,7 @@ class Drawer {
             if (card.id == gameState.newHandCardId) {
                 img.classList.add("new-hand-card");
             }
-            if (gameState.currentPlayerId === currentViewPlayerId) {
+            if (gameState.isPlayerCurrentPlayer) {
                 if (gameState.validMoves.includes(card.id)) {
                     img.classList.add("valid-move")
                     img.addEventListener("click", (event) => this.gameController.userClicksCard(event))
@@ -103,20 +104,9 @@ class Drawer {
     }
 
     drawPlayedCards() {
-        let trickWinner = gameState.trickWinner;
-
-        this.fillContainerWithPlayedCard("player-played-card-container",
-            gameState.playedCardIdPlayer,
-            trickWinner === currentViewPlayerId);
-        this.fillContainerWithPlayedCard("opponent-played-card-container",
-            gameState.playedCardIdOpponent,
-            trickWinner === opponentPlayerId);
-
         let removeButtonContainerId = "remove-cards-button-container"
 
-        
-
-        if (gameState.cardsCanBeRemoved) {
+        if (gameController.canCardsBeRemoved) {
             let button = document.createElement("button");
             button.id = "remove-cards-button"
             button.classList.add("btn");
@@ -124,12 +114,25 @@ class Drawer {
             button.innerHTML = "Remove Cards"
             button.addEventListener("click", (event) => this.gameController.removeCards())
             document.getElementById(removeButtonContainerId).replaceChildren(button);
+
+            let trickWinner = gameState.trickWinner;
+
+            this.fillContainerWithPlayedCard("player-played-card-container",
+                gameState.previousPlayedCardIdPlayer,
+                gameState.isPlayerPreviousTrickWinner);
+            this.fillContainerWithPlayedCard("opponent-played-card-container",
+                gameState.previousPlayedCardIdOpponent,
+                !gameState.isPlayerPreviousTrickWinner);
         }
         else {
+            this.fillContainerWithPlayedCard("player-played-card-container",
+                gameState.playedCardIdPlayer,
+                false);
+            this.fillContainerWithPlayedCard("opponent-played-card-container",
+                gameState.playedCardIdOpponent,
+                false);
 
-            document.getElementById(removeButtonContainerId).replaceChildren([]);
-
-            if (gameState.currentPlayerId != currentViewPlayerId) {
+            if (gameController.waitingForOtherPlayer) {
                 document.getElementById(removeButtonContainerId).innerHTML = "Waiting for other Player";
             }
             else {
@@ -150,26 +153,21 @@ class Drawer {
         document.getElementById("opponent-score").innerHTML = gameState.totalScoreOpponent;
         document.getElementById("target-score").innerHTML = gameState.targetScore;
     }
-
-    drawNewGameButton() {
-        document.getElementById("newGameButton").innerHTML = "Start new Game (Current Game id = " + gameState.id + ")";
-
-    }
-
 }
 
 
 class GameController {
-    isPollingGameState;
+    waitingForOtherPlayer;
+    canCardsBeRemoved;
     constructor() { }
 
     setDrawer(drawer) {
         this.drawer = drawer;
-        this.isPollingGameState = true;
+        this.canCardsBeRemoved = false;
     }
 
     async playCard(cardId) {
-        try {                   
+        try {
             const response = await fetch(`/api/games/GermanWhist/${gameId}/move`, {
                 method: "POST",
                 headers: {
@@ -178,7 +176,7 @@ class GameController {
                 body: JSON.stringify({
                     playerId: currentViewPlayerId,
                     cardId: cardId
-                })         
+                })
             });
 
             if (!response.ok) {
@@ -188,6 +186,15 @@ class GameController {
 
             const gameState = await response.json();
             console.log("Card played:", gameState);
+            gameController.canCardsBeRemoved = false;
+            if (!gameState.isTrickOngoing) {
+                gameController.canCardsBeRemoved = true;
+            }
+            else {
+                if (!gameState.isPlayerCurrentPlayer) {
+                    gameController.startPollingGameState();
+                }
+            }
             return gameState
         } catch (error) {
             console.error("There was a problem with the fetch operation:", error);
@@ -257,16 +264,36 @@ class GameController {
         }
     }
 
-    async removeCards() {
-        gameState = await this.getPlayerView();
+    removeCards() {
+        this.canCardsBeRemoved = false;
+        if (!gameState.isPlayerCurrentPlayer) {
+            this.startPollingGameState();
+        }
         this.drawer.drawGameState();
     }
 
-    async  pollGameState() {
-        while (this.isPollingGameState) {
+    hasGameStateChanged(newGameState) {
+        return (
+            newGameState.previousPlayedCardIdOpponent != gameState.previousPlayedCardIdOpponent ||
+            newGameState.playedCardIdOpponent != gameState.playedCardIdOpponent ||
+            newGameState.previousPlayedCardIdPlayer != gameState.previousPlayedCardIdPlayer ||
+            newGameState.playedCardIdPlayer != gameState.playedCardIdPlayer
+        )
+    }
+
+    async startPollingGameState() {
+        this.waitingForOtherPlayer = true;
+        while (this.waitingForOtherPlayer) {
             await new Promise(resolve => setTimeout(resolve, 500));
-            gameState = await this.getPlayerView();
-            drawer.drawGameState();
+            let newGameState = await this.getPlayerView();
+            if (this.hasGameStateChanged(newGameState)) {
+                gameState = newGameState;
+                this.waitingForOtherPlayer = false;
+                if (!gameState.isTrickOngoing) {
+                    this.canCardsBeRemoved = true;
+                }
+                drawer.drawGameState();
+            }
         }
     }
 
@@ -278,9 +305,9 @@ class GameController {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    player1Id : player1Id,
-                    player2Id : player2Id
-                })         
+                    player1Id: player1Id,
+                    player2Id: player2Id
+                })
 
             });
 
@@ -288,8 +315,8 @@ class GameController {
                 throw new Error("Network response was not ok");
             }
             const newGame = await response.json();
-            console.log("New Game Started:", gameState);
-            return gameState
+            console.log("New Game Started:", newGame);
+            return newGame
         } catch (error) {
             console.error("There was a problem with the delete operation:", error);
         }
@@ -316,19 +343,17 @@ async function changePlayer() {
     }
 
     gameState = await gameController.getPlayerView();
+    if (!gameState.isPlayerCurrentPlayer) {
+        gameController.startPollingGameState();
+    }
+    else {
+        gameController.waitingForOtherPlayer = false;
+    }
     drawer.drawGameState()
 }
 
-async function startNewGame() {
-    newGame = await gameController.startNewGame()
-    gameId = newGame.id;
-    gameState = await gameController.getPlayerView();
-    drawer.drawGameState()
-}
 
-
-
-const gameId = 1;
+var gameId = 2;
 const player1Id = 1;
 const player2Id = 2;
 
@@ -347,9 +372,10 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     gameState = await gameController.getPlayerView();
     cardsList = await gameController.getCardsList();
     addFileNamesToCards(cardsList);
-    drawer.drawGameState()
     document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
-    document.getElementById("newGameButton").addEventListener("click", startNewGame)
-    gameController.pollGameState()
+    if (!gameState.isPlayerCurrentPlayer) {
+        gameController.startPollingGameState();
+    }
+    drawer.drawGameState()
 })
 

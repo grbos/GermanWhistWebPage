@@ -115,19 +115,22 @@ namespace GermanWhistWebPage.Services
             if (!game.IsEndOfTrick)
             {
                 nextPlayerId = game.CurrentPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
+                game.CurrentPlayerId = nextPlayerId;
+                return;
+
             }
-            else
-            {
-                int winningPlayerId = get_trick_winner(game);
-                evaluateTrick(game, winningPlayerId);
-                game.PreviousPlayedCardIdPlayer1 = game.PlayedCardIdPlayer1;
-                game.PreviousPlayedCardIdPlayer2 = game.PlayedCardIdPlayer2;
-                game.PlayedCardIdPlayer1 = null;
-                game.PlayedCardIdPlayer2 = null;
-                nextPlayerId = winningPlayerId;
-                game.TrickStartPlayerId = nextPlayerId;
-                game.TrickWiningPlayerPreviousRound = winningPlayerId;
-            }
+
+            int winningPlayerId = get_trick_winner(game);
+            evaluateTrick(game, winningPlayerId);
+            game.PreviousPlayedCardIdPlayer1 = game.PlayedCardIdPlayer1;
+            game.PreviousPlayedCardIdPlayer2 = game.PlayedCardIdPlayer2;
+            game.PlayedCardIdPlayer1 = null;
+            game.PlayedCardIdPlayer2 = null;
+            nextPlayerId = winningPlayerId;
+            game.TrickStartPlayerId = nextPlayerId;
+            game.TrickWiningPlayerPreviousRound = winningPlayerId;
+
+
             if (game.IsEndOfRound)
             {
                 List<int> shuffledCards = _cardService.GetShuffeledCards();

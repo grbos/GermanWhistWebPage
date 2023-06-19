@@ -16,10 +16,15 @@ namespace GermanWhistWebPage.Models
         public int? PlayedCardIdPlayer { get; private set; }
         public int? PlayedCardIdOpponent { get; private set; }
 
+        public int? PreviousPlayedCardIdPlayer { get; private set; }
+        public int? PreviousPlayedCardIdOpponent { get; private set; }
 
-        public int StartingPlayerId { get; private set; }
-        public int TrickStartPlayerId { get; private set; }
-        public int CurrentPlayerId { get; private set; }
+
+        public bool IsPlayerStartingPlayer { get; private set; }
+        public bool IsPlayerTrickStartPlayer { get; private set; }
+        public bool IsPlayerCurrentPlayer { get; private set; }
+
+        public bool IsPlayerPreviousTrickWinner { get; private set; }
 
         public Suit TrumpSuit { get; private set; }
         public string TrumpSuitName { get; private set; }
@@ -32,6 +37,14 @@ namespace GermanWhistWebPage.Models
         
         public ICollection<int> ValidMoves { get; private set; }
 
+        public bool IsTrickOngoing { get
+            {
+                return PlayedCardIdPlayer != null || PlayedCardIdOpponent != null;
+            } 
+        }
+
+        
+
 
         public PlayerViewOfGameStateDTO(Game game , int playerId, ICollection<int> validMoves)
         {
@@ -42,9 +55,15 @@ namespace GermanWhistWebPage.Models
 
             PlayedCardIdPlayer = playerId == game.Player1Id ? game.PlayedCardIdPlayer1 : game.PlayedCardIdPlayer2;
             PlayedCardIdOpponent = playerId == game.Player1Id ? game.PlayedCardIdPlayer2 : game.PlayedCardIdPlayer1;
-            StartingPlayerId = game.StartingPlayerId;
-            TrickStartPlayerId = game.TrickStartPlayerId;
-            CurrentPlayerId = game.CurrentPlayerId;
+            PreviousPlayedCardIdPlayer = playerId == game.Player1Id ? game.PreviousPlayedCardIdPlayer1 : game.PreviousPlayedCardIdPlayer2;
+            PreviousPlayedCardIdOpponent = playerId == game.Player1Id ? game.PreviousPlayedCardIdPlayer2 : game.PreviousPlayedCardIdPlayer1;
+
+            IsPlayerStartingPlayer = game.StartingPlayerId == playerId;
+            IsPlayerTrickStartPlayer = game.TrickStartPlayerId == playerId;
+            IsPlayerCurrentPlayer = game.CurrentPlayerId == playerId;
+
+            IsPlayerPreviousTrickWinner = game.TrickWiningPlayerPreviousRound == playerId;
+
             TrumpSuit = game.TrumpSuit;
             TrumpSuitName = game.TrumpSuit.ToString();
             TargetScore = game.TargetScore;
@@ -54,6 +73,8 @@ namespace GermanWhistWebPage.Models
             RoundScoreOpponent = playerId == game.Player1Id ? game.RoundScorePlayer2 : game.TotalScorePlayer2;
             ValidMoves = validMoves;
             NumberOfHandCardsOpponent = playerId == game.Player1Id ? game.HandPlayer2.Count() : game.HandPlayer1.Count();
+
+
         }
     }
 }

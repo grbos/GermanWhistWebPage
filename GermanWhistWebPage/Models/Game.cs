@@ -65,7 +65,7 @@ namespace GermanWhistWebPage.Models
         {
             get
             {
-                if (HandPlayer1.Count() == 0 && HandPlayer1.Count() == 0)
+                if (HandPlayer1.Count() == 0 && HandPlayer2.Count() == 0)
                     return true;
                 return false;
             }
