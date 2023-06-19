@@ -158,10 +158,12 @@ class Drawer {
 
 
 class GameController {
+    isPollingGameState;
     constructor() { }
 
     setDrawer(drawer) {
         this.drawer = drawer;
+        this.isPollingGameState = true;
     }
 
     async playCard(cardId) {
@@ -180,6 +182,7 @@ class GameController {
 
             if (!response.ok) {
                 throw new Error("Network response was not ok");
+                console.log("Network error response:", await response.json(););
             }
 
             const gameState = await response.json();
@@ -210,7 +213,6 @@ class GameController {
                 throw new Error("Network response was not ok");
             }
             const gameState = await response.json();
-            console.log("Card played:", gameState);
             return gameState
         } catch (error) {
             console.error("There was a problem with the fetch operation:", error);
@@ -259,6 +261,14 @@ class GameController {
         this.drawer.drawGameState();
     }
 
+    async  pollGameState() {
+        while (this.isPollingGameState) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            gameState = await this.getPlayerView();
+            drawer.drawGameState();
+        }
+}
+
 }
 
 function addFileNamesToCards(cardsList) {
@@ -283,6 +293,8 @@ async function changePlayer() {
     drawer.drawGameState()
 }
 
+
+
 const gameId = 1;
 const player1Id = 1;
 const player2Id = 2;
@@ -304,5 +316,6 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     addFileNamesToCards(cardsList);
     drawer.drawGameState()
     document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
+    gameController.pollGameState()
 })
 
