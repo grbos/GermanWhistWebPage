@@ -3,22 +3,23 @@ using GermanWhistWebPage.Services;
 using Microsoft.EntityFrameworkCore;
 
 
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .Build();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 
-
-var folder = Environment.SpecialFolder.LocalApplicationData;
-var path = Environment.GetFolderPath(folder);
-String SqliteDbPath = Path.Join("GermanWhist.db");
-
+string sqliteDbPath = configuration.GetConnectionString("SQLiteConnection");
 
 // Change this to change database 
 builder.Services.AddDbContext<GameContext>(opt =>
     {
-        opt.UseSqlite($"Data Source={SqliteDbPath}");
+        opt.UseSqlite(sqliteDbPath);
     });
 
 builder.Services.AddScoped<CardService>();

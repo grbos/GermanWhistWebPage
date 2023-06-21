@@ -18,8 +18,7 @@ class Drawer {
             }
             // gameController.deleteGameState()
         }
-        document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`
-        document.getElementById("newGameButton").innerHTML = "Start new Game (Current Game id = " + gameState.id + ")";
+        document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`;
         this.drawOpponentCards();
         this.drawUserCards();
         this.drawStackTopCardAndRoundScore();
