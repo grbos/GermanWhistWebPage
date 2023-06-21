@@ -1,13 +1,10 @@
 using GermanWhistWebPage.Models;
 using GermanWhistWebPage.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-
-
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json")
-    .Build();
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-string sqliteDbPath = configuration.GetConnectionString("SQLiteConnection");
+string sqliteDbPath = builder.Configuration.GetConnectionString("SQLiteConnection");
 
 // Change this to change database 
 builder.Services.AddDbContext<GameContext>(opt =>
@@ -46,6 +43,23 @@ builder.Services.AddIdentityCore<IdentityUser>(options =>
 })
     .AddEntityFrameworkStores<GameContext>();
 
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+            )
+        };
+    });
 
 var app = builder.Build();
 
@@ -64,6 +78,8 @@ app.UseStaticFiles();
 
 
 
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

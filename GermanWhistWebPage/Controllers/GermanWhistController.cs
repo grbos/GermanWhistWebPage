@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GermanWhistWebPage.Models;
 using GermanWhistWebPage.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GermanWhistWebPage.Controllers
 {
@@ -62,6 +63,7 @@ namespace GermanWhistWebPage.Controllers
             return new GameInfoDTO(game);
         }
 
+        [Authorize]
         [HttpGet("{id}/player-view")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetPlayerView(int id, int PlayerId)
         {

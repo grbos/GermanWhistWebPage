@@ -10,7 +10,7 @@ namespace GermanWhistWebPage.Services
 {
     public class JwtService
     {
-        private const int EXPIRATION_MINUTES = 1;
+        private const int EXPIRATION_MINUTES = 10000;
 
         private readonly IConfiguration _configuration;
 
