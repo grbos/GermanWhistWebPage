@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
 
 namespace GermanWhistWebPage.Models
 {
-    public class GameContext : DbContext
+    public class GameContext : IdentityUserContext<IdentityUser>
     {
         public GameContext(DbContextOptions<GameContext> options)
     : base(options)
