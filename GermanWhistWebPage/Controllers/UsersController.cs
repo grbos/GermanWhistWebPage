@@ -41,6 +41,23 @@ namespace GermanWhistWebPage.Controllers
             return Created("", user);
         }
 
+        // GET: api/Users/username
+        [HttpGet("{username}")]
+        public async Task<ActionResult<User>> GetUser(string username)
+        {
+            IdentityUser user = await _userManager.FindByNameAsync(username);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return new User
+            {
+                UserName = user.UserName,
+                Email = user.Email
+            };
+        }
 
     }
 }
