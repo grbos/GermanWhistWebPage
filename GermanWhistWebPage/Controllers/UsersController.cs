@@ -24,7 +24,7 @@ namespace GermanWhistWebPage.Controllers
 
         // POST: api/Users
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<UserDTO>> PostUser(UserDTO user)
         {
             if (!ModelState.IsValid)
             {
@@ -47,7 +47,7 @@ namespace GermanWhistWebPage.Controllers
 
         // GET: api/Users/username
         [HttpGet("{username}")]
-        public async Task<ActionResult<User>> GetUser(string username)
+        public async Task<ActionResult<UserDTO>> GetUser(string username)
         {
             IdentityUser user = await _userManager.FindByNameAsync(username);
 
@@ -56,7 +56,7 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            return new User
+            return new UserDTO
             {
                 UserName = user.UserName,
                 Email = user.Email

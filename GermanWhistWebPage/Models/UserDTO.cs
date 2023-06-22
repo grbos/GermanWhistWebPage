@@ -2,7 +2,7 @@
 
 namespace GermanWhistWebPage.Models
 {
-    public class User
+    public class UserDTO
     {
         [Required]
         public string UserName { get; set; }
