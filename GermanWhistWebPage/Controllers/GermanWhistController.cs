@@ -80,7 +80,7 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player player = _context.Players.Find(PlayerId);
+            Player player = _context.HumanPlayers.Find(PlayerId);
             if (player == null)
             {
                 return NotFound();
@@ -110,7 +110,7 @@ namespace GermanWhistWebPage.Controllers
         [HttpPost("{id}/move")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, MoveDTO move)
         {
-            if (_context.Games == null || _context.Players == null)
+            if (_context.Games == null || _context.HumanPlayers == null)
             {
                 return NotFound();
             }
@@ -121,7 +121,7 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player player = await _context.Players.FindAsync(move.PlayerId);
+            Player player = await _context.HumanPlayers.FindAsync(move.PlayerId);
             if (player == null)
             {
                 return NotFound();
@@ -150,8 +150,8 @@ namespace GermanWhistWebPage.Controllers
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
-            Player player1 = await _context.Players.FindAsync(playerInfo.Player1Id);
-            Player player2 = await _context.Players.FindAsync(playerInfo.Player2Id);
+            Player player1 = await _context.HumanPlayers.FindAsync(playerInfo.Player1Id);
+            Player player2 = await _context.HumanPlayers.FindAsync(playerInfo.Player2Id);
             if (player1 == null || player2 == null)
             {
                 return NotFound();
