@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/GermanWhistWebPage/GermanWhist.db-wal
+/GermanWhistWebPage/GermanWhist.db-shm
