@@ -29,6 +29,7 @@ namespace GermanWhistWebPage.Controllers
             _cardService = cardService;
         }
 
+        //[Authorize]
         // GET: api/Games
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameInfoDTO>>> GetGames()
@@ -45,6 +46,7 @@ namespace GermanWhistWebPage.Controllers
             return games.Select(game => new GameInfoDTO(game)).ToList();
         }
 
+        //[Authorize]
         // GET: api/Games/5
         [HttpGet("{id}")]
         public async Task<ActionResult<GameInfoDTO>> GetGame(int id)
@@ -63,7 +65,7 @@ namespace GermanWhistWebPage.Controllers
             return new GameInfoDTO(game);
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpGet("{id}/player-view")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetPlayerView(int id, int PlayerId)
         {
@@ -87,6 +89,7 @@ namespace GermanWhistWebPage.Controllers
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, PlayerId));
         }
 
+        //[Authorize]
         [HttpGet("{id}/game-state")]
         public async Task<ActionResult<Game>> GetGameState(int id)
         {
@@ -103,6 +106,7 @@ namespace GermanWhistWebPage.Controllers
             return game;
         }
 
+        //[Authorize]
         [HttpPost("{id}/move")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, MoveDTO move)
         {
@@ -135,6 +139,7 @@ namespace GermanWhistWebPage.Controllers
             await _context.SaveChangesAsync();
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
+
 
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
