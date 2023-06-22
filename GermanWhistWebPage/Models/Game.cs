@@ -10,7 +10,7 @@ namespace GermanWhistWebPage.Models
         public int Player1Id { get; set; }
         [ForeignKey("Player1Id")]
         public Player Player1 { get; set; }
-        public int Player2Id { get; set; }
+        public int? Player2Id { get; set; }
         [ForeignKey("Player2Id")]
         public Player Player2 { get; set; }
 

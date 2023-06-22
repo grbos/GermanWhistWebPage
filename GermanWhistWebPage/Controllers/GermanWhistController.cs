@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using GermanWhistWebPage.Models;
 using GermanWhistWebPage.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace GermanWhistWebPage.Controllers
 {
@@ -16,58 +18,42 @@ namespace GermanWhistWebPage.Controllers
     public class GermanWhistController : ControllerBase
     {
         private readonly GameContext _context;
-        private readonly PlayerService  _playerService;
+        private readonly PlayerService _playerService;
         private readonly GameService _gameService;
         private readonly CardService _cardService;
+        private readonly Microsoft.AspNetCore.Identity.UserManager<IdentityUser> _userManager;
 
-        public GermanWhistController(GameContext context, PlayerService playerService, 
-            GameService gameService, CardService cardService)
+        public GermanWhistController(GameContext context, PlayerService playerService,
+            GameService gameService, CardService cardService, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _playerService = playerService;
             _gameService = gameService;
             _cardService = cardService;
+            _userManager = userManager;
         }
 
         //[Authorize]
-        // GET: api/Games
+        // GET: api/games/GermanWhist
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameInfoDTO>>> GetGames()
         {
-          if (_context.Games == null)
-          {
-              return NotFound();
-          }
-        var games = await _context.Games.ToListAsync();
-        if (games == null)
-        {
-            return NotFound();
-        }
+            if (_context.Games == null)
+            {
+                return NotFound();
+            }
+            var games = await _context.Games.ToListAsync();
+            if (games == null)
+            {
+                return NotFound();
+            }
             return games.Select(game => new GameInfoDTO(game)).ToList();
         }
 
         //[Authorize]
-        // GET: api/Games/5
+        // GET: api/games/GermanWhist/5
         [HttpGet("{id}")]
         public async Task<ActionResult<GameInfoDTO>> GetGame(int id)
-        {
-          if (_context.Games == null)
-          {
-              return NotFound();
-          }
-            var game = await _context.Games.FindAsync(id);
-
-            if (game == null)
-            {
-                return NotFound();
-            }
-
-            return new GameInfoDTO(game);
-        }
-
-        //[Authorize]
-        [HttpGet("{id}/player-view")]
-        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetPlayerView(int id, int PlayerId)
         {
             if (_context.Games == null)
             {
@@ -80,16 +66,37 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player player = _context.HumanPlayers.Find(PlayerId);
-            if (player == null)
+            return new GameInfoDTO(game);
+        }
+
+        // GET: api/games/GermanWhist/5/player-view
+        [Authorize]
+        [HttpGet("{id}/player-view")]
+        public async Task<ActionResult<PlayerViewOfGameStateDTO>> GetPlayerView(int id)
+        {
+            if (_context.Games == null)
+            {
+                return NotFound();
+            }
+            var game = await _context.Games.FindAsync(id);
+
+            if (game == null)
             {
                 return NotFound();
             }
 
-            return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, PlayerId));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Player player = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
+            if (player == null)
+            {
+                return BadRequest("Bad credentials");
+            }
+
+            return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
 
-        //[Authorize]
+        // GET: api/games/GermanWhist/5/game-state
+        // [Authorize]
         [HttpGet("{id}/game-state")]
         public async Task<ActionResult<Game>> GetGameState(int id)
         {
@@ -106,7 +113,9 @@ namespace GermanWhistWebPage.Controllers
             return game;
         }
 
-        //[Authorize]
+
+        // POST: api/games/GermanWhist/5/move
+        [Authorize]
         [HttpPost("{id}/move")]
         public async Task<ActionResult<PlayerViewOfGameStateDTO>> MakeAMove(int id, MoveDTO move)
         {
@@ -120,11 +129,11 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-
-            Player player = await _context.HumanPlayers.FindAsync(move.PlayerId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Player player = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
             if (player == null)
             {
-                return NotFound();
+                return BadRequest("Bad credentials");
             }
 
             try
@@ -135,29 +144,50 @@ namespace GermanWhistWebPage.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            
+
             await _context.SaveChangesAsync();
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
 
 
-        // POST: api/Games
+        // POST: api/games/GermanWhist
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<GameInfoDTO>> PostGame([FromBody] PlayerInfoDTO playerInfo)
+        public async Task<ActionResult<GameInfoDTO>> PostGame([FromBody] NewGameInfoDTO newGameInfoDTO)
         {
             if (_context.Games == null)
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
-            Player player1 = await _context.HumanPlayers.FindAsync(playerInfo.Player1Id);
-            Player player2 = await _context.HumanPlayers.FindAsync(playerInfo.Player2Id);
-            if (player1 == null || player2 == null)
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Player player1 = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
+            if (player1 == null)
+                return BadRequest("Bad Credentials");
+
+
+            Player? player2 = null;
+            if (newGameInfoDTO.AgainstBotOpponent)
             {
-                return NotFound();
+                int botDifficulty = newGameInfoDTO.BotDifficulty.GetValueOrDefault();
+
+                player2 = _playerService.getBotPlayer(botDifficulty);
+                if (player2 == null)
+                    return BadRequest("Bad Bot Settings in request");
+            }
+            else
+            {
+                if (newGameInfoDTO.OpponentPlayerId != null)
+                {
+                    player2 = await _context.HumanPlayers.FindAsync(newGameInfoDTO.OpponentPlayerId);
+                    if (player2 == null)
+                        return BadRequest("Opponent Player not found");
+                }
+
             }
 
-            Game game = _gameService.createGame(player1.Id, player2.Id);
+            int? player2Id = player2 == null ? null : player2.Id;
+
+            Game game = _gameService.createGame(player1.Id, player2Id);
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
@@ -165,7 +195,8 @@ namespace GermanWhistWebPage.Controllers
             return CreatedAtAction("GetGame", new { id = game.Id }, new GameInfoDTO(game));
         }
 
-        // DELETE: api/Games/5
+        // DELETE: api/games/GermanWhist/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
@@ -178,18 +209,27 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Player player = await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+            if (player == null)
+            {
+                return BadRequest("Bad credentials");
+            }
+            if (game.Player1 != player && game.Player2 != player)
+            {
+                return BadRequest("Player not part of this game");
+            }
             _context.Games.Remove(game);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // GET: api/GermanWhist/Cards
+        // GET: api/games/GermanWhist/Cards
         [HttpGet("Cards")]
         public async Task<ActionResult<IEnumerable<Card>>> GetCards()
         {
-            
+
             return _cardService.Cards;
         }
 

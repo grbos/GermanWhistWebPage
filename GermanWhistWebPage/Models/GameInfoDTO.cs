@@ -4,7 +4,7 @@
     {
         public int Id { get; private set; }
         public int Player1Id { get; private set; }
-        public int Player2Id { get; private set; }
+        public int? Player2Id { get; private set; }
         public bool HasGameStarted {
             get {
                 if (Player1Id != null && Player2Id != null)

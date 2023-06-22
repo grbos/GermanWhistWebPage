@@ -10,5 +10,7 @@ namespace GermanWhistWebPage.Models
         public string Password { get; set; }
         [Required]
         public string Email { get; set; }
+
+        public int? PlayerId { get; set; }
     }
 }

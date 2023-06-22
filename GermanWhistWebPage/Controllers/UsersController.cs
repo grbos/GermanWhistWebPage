@@ -2,6 +2,7 @@
 using GermanWhistWebPage.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Numerics;
 
 namespace GermanWhistWebPage.Controllers
 {
@@ -11,14 +12,17 @@ namespace GermanWhistWebPage.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly JwtService _jwtService;
+        private readonly GameContext _gameContext;
 
         public UsersController(
             UserManager<IdentityUser> userManager,
-            JwtService jwtService
+            JwtService jwtService,
+            GameContext gameContext
         )
         {
             _userManager = userManager;
             _jwtService = jwtService;
+            _gameContext = gameContext;
         }
 
 
@@ -30,9 +34,9 @@ namespace GermanWhistWebPage.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            IdentityUser identityUser = new IdentityUser() { UserName = user.UserName, Email = user.Email };
             var result = await _userManager.CreateAsync(
-                new IdentityUser() { UserName = user.UserName, Email = user.Email },
+                identityUser,
                 user.Password
             );
 
@@ -41,7 +45,16 @@ namespace GermanWhistWebPage.Controllers
                 return BadRequest(result.Errors);
             }
 
+            HumanPlayer player = new HumanPlayer()
+            {
+                IdentityUserId = identityUser.Id,
+                IdentityUser = identityUser
+            };
+            _gameContext.HumanPlayers.Add(player);
+            await _gameContext.SaveChangesAsync();
+
             user.Password = null;
+            user.PlayerId = player.Id;
             return Created("", user);
         }
 
