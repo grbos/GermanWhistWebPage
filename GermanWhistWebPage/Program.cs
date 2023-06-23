@@ -22,7 +22,7 @@ builder.Services.AddDbContext<GameContext>(opt =>
     });
 
 builder.Services.AddScoped<CardService>();
-builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<BotService>();
 builder.Services.AddScoped<GameService>();
 
 builder.Services.AddScoped<JwtService>();

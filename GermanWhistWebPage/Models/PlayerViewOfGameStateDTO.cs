@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Numerics;
+using System.Xml.Linq;
 
 namespace GermanWhistWebPage.Models
 {
@@ -48,6 +49,9 @@ namespace GermanWhistWebPage.Models
 
         public PlayerViewOfGameStateDTO(Game game , int playerId, ICollection<int> validMoves)
         {
+            if (game.Player1Id != playerId && game.Player2Id != playerId)
+                throw new ArgumentException("Player not playing this game", nameof(playerId));
+
             Id = game.Id;
             Hand = playerId == game.Player1Id ? game.HandPlayer1 : game.HandPlayer2;
             NewHandCardId = playerId == game.Player1Id ? game.NewHandCardIdPlayer1 : game.NewHandCardIdPlayer2;

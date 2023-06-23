@@ -17,7 +17,7 @@ namespace GermanWhistWebPage.Services
         }
         public void deleteGame(Game game) { }
 
-        public Game createGame(int player1Id, int? player2Id)
+        public Game createGame(int player1Id, int? player2Id, bool isBotGame)
         {
 
             List<int> shuffledCards = _cardService.GetShuffeledCards();
@@ -41,7 +41,9 @@ namespace GermanWhistWebPage.Services
                 TotalScorePlayer1 = 0,
                 TotalScorePlayer2 = 0,
                 RoundScorePlayer1 = 0,
-                RoundScorePlayer2 = 0
+                RoundScorePlayer2 = 0,
+
+                IsBotGame = isBotGame
             };
         }
 

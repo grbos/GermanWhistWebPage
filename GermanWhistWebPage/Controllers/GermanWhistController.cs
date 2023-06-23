@@ -18,16 +18,16 @@ namespace GermanWhistWebPage.Controllers
     public class GermanWhistController : ControllerBase
     {
         private readonly GameContext _context;
-        private readonly PlayerService _playerService;
+        private readonly BotService _botService;
         private readonly GameService _gameService;
         private readonly CardService _cardService;
         private readonly Microsoft.AspNetCore.Identity.UserManager<IdentityUser> _userManager;
 
-        public GermanWhistController(GameContext context, PlayerService playerService,
+        public GermanWhistController(GameContext context, BotService botService,
             GameService gameService, CardService cardService, UserManager<IdentityUser> userManager)
         {
             _context = context;
-            _playerService = playerService;
+            _botService = botService;
             _gameService = gameService;
             _cardService = cardService;
             _userManager = userManager;
@@ -91,7 +91,7 @@ namespace GermanWhistWebPage.Controllers
             if (game.HasGameStarted)
                 return BadRequest("Game has already started and cannot be joined");
 
-            Player? player = await GetCurrentPlayer();
+            Player? player = await GetCurrentPlayerAsync();
             if (player == null)
                 return Problem("User Could not be connected to a player");
 
@@ -118,12 +118,12 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Player player = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
+            Player? player = await GetCurrentPlayerAsync();
             if (player == null)
-            {
-                return BadRequest("Bad credentials");
-            }
+                return Problem("User Could not be connected to a player");
+
+            if (game.Player1 != player && game.Player2 != player)
+                return BadRequest("You are not a player of this game");
 
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
@@ -163,7 +163,7 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player? player = await GetCurrentPlayer();
+            Player? player = await GetCurrentPlayerAsync();
             if (player == null)
                 return Problem("User Could not be connected to a player");
 
@@ -177,21 +177,30 @@ namespace GermanWhistWebPage.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
+
+            PlayerViewOfGameStateDTO playerView = new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
+
+            if (game.IsBotGame)
+            {
+                _botService.MakeBotMovesUntilNextHumanInput(game);
+                await _context.SaveChangesAsync();
+            }
+
+            return playerView;
         }
 
 
         // POST: api/games/GermanWhist
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<GameInfoDTO>> PostGame([FromBody] NewGameInfoDTO newGameInfoDTO)
+        public async Task<ActionResult<GameInfoDTO>> StartNewGame([FromBody] NewGameInfoDTO newGameInfoDTO)
         {
             if (_context.Games == null)
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
 
-            Player? player1 = await GetCurrentPlayer();
+            Player? player1 = await GetCurrentPlayerAsync();
             if (player1 == null)
                 return Problem("User Could not be connected to a player");
 
@@ -201,7 +210,7 @@ namespace GermanWhistWebPage.Controllers
             {
                 int botDifficulty = newGameInfoDTO.BotDifficulty.GetValueOrDefault();
 
-                player2 = _playerService.getBotPlayer(botDifficulty);
+                player2 = _botService.getBotPlayer(botDifficulty);
                 if (player2 == null)
                     return BadRequest("Bad Bot Settings in request");
             }
@@ -218,7 +227,7 @@ namespace GermanWhistWebPage.Controllers
 
             int? player2Id = player2 == null ? null : player2.Id;
 
-            Game game = _gameService.createGame(player1.Id, player2Id);
+            Game game = _gameService.createGame(player1.Id, player2Id, newGameInfoDTO.AgainstBotOpponent);
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
@@ -241,7 +250,7 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
-            Player? player = await GetCurrentPlayer();
+            Player? player = await GetCurrentPlayerAsync();
             if (player == null)
                 return Problem("User Could not be connected to a player");
 
@@ -268,10 +277,15 @@ namespace GermanWhistWebPage.Controllers
             return (_context.Games?.Any(e => e.Id == id)).GetValueOrDefault();
         }
 
-        private async Task<Player?> GetCurrentPlayer()
+        private async Task<Player?> GetCurrentPlayerAsync()
         {
             String userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+        }
+        private Player? GetCurrentPlayer()
+        {
+            String userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return _context.HumanPlayers.FirstOrDefault(p => p.IdentityUserId == userId);
         }
     }
 }
