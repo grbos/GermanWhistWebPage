@@ -127,6 +127,12 @@ namespace GermanWhistWebPage.Controllers
             if (game.Player1 != player && game.Player2 != player)
                 return BadRequest("You are not a player of this game");
 
+            if (game.IsBotGame && game.CurrentPlayerId != player.Id)
+            {
+                _botService.MakeBotMove(game);
+                await _context.SaveChangesAsync();
+            }
+
             return new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
         }
 
@@ -181,13 +187,6 @@ namespace GermanWhistWebPage.Controllers
             await _context.SaveChangesAsync();
 
             PlayerViewOfGameStateDTO playerView = new PlayerViewOfGameStateDTO(game, player.Id, _gameService.getValidMoves(game, player.Id));
-
-            if (game.IsBotGame)
-            {
-                _botService.MakeBotMovesUntilNextHumanInput(game);
-                await _context.SaveChangesAsync();
-            }
-
             return playerView;
         }
 

@@ -26,7 +26,7 @@ namespace GermanWhistWebPage.Services
 
         public BotPlayer getBotPlayer(int botDifficulty)
         {
-            if (botDifficulty < minBotDificulty || botDifficulty > maxBotDificulty) 
+            if (botDifficulty < minBotDificulty || botDifficulty > maxBotDificulty)
                 return null;
 
             BotPlayer? player = _gameContext.BotPlayers.FirstOrDefault(p => p.Difficulty == botDifficulty);
@@ -43,25 +43,21 @@ namespace GermanWhistWebPage.Services
             return player;
         }
 
-        public void MakeBotMovesUntilNextHumanInput(Game game)
+        public void MakeBotMove(Game game)
         {
             if (!game.IsBotGame)
                 throw new ArgumentException("Game is not a bot game");
 
             int botPlayerId = game.Player2Id.Value;
 
-            while(game.CurrentPlayerId ==  botPlayerId)
-            {
-                var validMoves = _gameService.getValidMoves(game, botPlayerId).ToList();
-            
-                if (validMoves.Count() == 0)
-                    throw new Exception("Bot has no valid moves");
-            
-                int move = validMoves[new Random().Next(validMoves.Count())];
-                _gameService.makeMove(game, botPlayerId, move);
-            }
-            
 
+            var validMoves = _gameService.getValidMoves(game, botPlayerId).ToList();
+
+            if (validMoves.Count() == 0)
+                throw new Exception("Bot has no valid moves");
+
+            int move = validMoves[new Random().Next(validMoves.Count())];
+            _gameService.makeMove(game, botPlayerId, move);
         }
     }
 }
