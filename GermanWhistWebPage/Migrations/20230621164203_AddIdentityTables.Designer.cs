@@ -3,6 +3,7 @@ using System;
 using GermanWhistWebPage.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GermanWhistWebPage.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20230621164203_AddIdentityTables")]
+    partial class AddIdentityTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.7");
@@ -38,9 +41,6 @@ namespace GermanWhistWebPage.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsBotGame")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("NewHandCardIdPlayer1")
                         .HasColumnType("INTEGER");
 
@@ -56,7 +56,7 @@ namespace GermanWhistWebPage.Migrations
                     b.Property<int>("Player1Id")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("Player2Id")
+                    b.Property<int>("Player2Id")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("PreviousPlayedCardIdPlayer1")
@@ -107,17 +107,13 @@ namespace GermanWhistWebPage.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Discriminator")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Player");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Player");
-
-                    b.UseTphMappingStrategy();
+                    b.ToTable("Players");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
@@ -248,33 +244,6 @@ namespace GermanWhistWebPage.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GermanWhistWebPage.Models.BotPlayer", b =>
-                {
-                    b.HasBaseType("GermanWhistWebPage.Models.Player");
-
-                    b.Property<string>("BotName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Difficulty")
-                        .HasColumnType("INTEGER");
-
-                    b.HasDiscriminator().HasValue("BotPlayer");
-                });
-
-            modelBuilder.Entity("GermanWhistWebPage.Models.HumanPlayer", b =>
-                {
-                    b.HasBaseType("GermanWhistWebPage.Models.Player");
-
-                    b.Property<string>("IdentityUserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasIndex("IdentityUserId");
-
-                    b.HasDiscriminator().HasValue("HumanPlayer");
-                });
-
             modelBuilder.Entity("GermanWhistWebPage.Models.Game", b =>
                 {
                     b.HasOne("GermanWhistWebPage.Models.Player", "Player1")
@@ -285,7 +254,9 @@ namespace GermanWhistWebPage.Migrations
 
                     b.HasOne("GermanWhistWebPage.Models.Player", "Player2")
                         .WithMany()
-                        .HasForeignKey("Player2Id");
+                        .HasForeignKey("Player2Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Player1");
 
@@ -317,17 +288,6 @@ namespace GermanWhistWebPage.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("GermanWhistWebPage.Models.HumanPlayer", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "IdentityUser")
-                        .WithMany()
-                        .HasForeignKey("IdentityUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("IdentityUser");
                 });
 #pragma warning restore 612, 618
         }

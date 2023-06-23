@@ -18,7 +18,6 @@ class Drawer {
             }
             // gameController.deleteGameState()
         }
-        document.getElementById("changePlayerButton").innerHTML = `Change to view of Player ${opponentPlayerId}`;
         this.drawOpponentCards();
         this.drawUserCards();
         this.drawStackTopCardAndRoundScore();
@@ -171,9 +170,9 @@ class GameController {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${JWTToken}`,
                 },
                 body: JSON.stringify({
-                    playerId: currentViewPlayerId,
                     cardId: cardId
                 })
             });
@@ -196,7 +195,7 @@ class GameController {
             }
             return gameState
         } catch (error) {
-            console.error("There was a problem with the fetch operation:", error);
+            console.error("There was a problem with the play card operation:", error);
         }
     }
 
@@ -209,10 +208,11 @@ class GameController {
 
     async getPlayerView() {
         try {
-            const response = await fetch(`/api/games/GermanWhist/${gameId}/player-view/?PlayerId=${currentViewPlayerId}`, {
+            const response = await fetch(`/api/games/GermanWhist/${gameId}/player-view/`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${JWTToken}`,
                 },
             });
 
@@ -239,27 +239,10 @@ class GameController {
                 throw new Error("Network response was not ok");
             }
             const cardsList = await response.json();
-            console.log("Card played:", cardsList);
+            console.log("Card List Received:", cardsList);
             return cardsList
         } catch (error) {
-            console.error("There was a problem with the fetch operation:", error);
-        }
-    }
-
-    async deleteGameState() {
-        try {
-            const response = await fetch(`/api/games/GermanWhist/${gameStateId}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-        } catch (error) {
-            console.error("There was a problem with the delete operation:", error);
+            console.error("There was a problem with the get cards list operation:", error);
         }
     }
 
@@ -295,32 +278,6 @@ class GameController {
             }
         }
     }
-
-    async startNewGame() {
-        try {
-            const response = await fetch(`/api/games/GermanWhist`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    player1Id: player1Id,
-                    player2Id: player2Id
-                })
-
-            });
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-            const newGame = await response.json();
-            console.log("New Game Started:", newGame);
-            return newGame
-        } catch (error) {
-            console.error("There was a problem with the delete operation:", error);
-        }
-    }
-
 }
 
 function addFileNamesToCards(cardsList) {
@@ -331,33 +288,304 @@ function addFileNamesToCards(cardsList) {
     }
 }
 
-async function changePlayer() {
-    if (currentViewPlayerId == player1Id) {
-        currentViewPlayerId = player2Id;
-        opponentPlayerId = player1Id;
+async function startNewGameAgainstHumanPlayer() {
+    var JsonBody = JSON.stringify({
+        opponentPlayerId: null,
+        againstBotOpponent: false,
+        botDifficulty: 0
+    });
+    await startNewGame(JsonBody);
+}
+
+async function startNewGameAgainstBotPlayer() {
+    var JsonBody = JSON.stringify({
+        opponentPlayerId: null,
+        againstBotOpponent: true,
+        botDifficulty: 0
+    });
+    await startNewGame(JsonBody);
+}
+
+async function startNewGame(JsonBody) {
+    try {
+        const response = await fetch(`/api/games/GermanWhist`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`
+            },
+            body: JsonBody
+
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const newGameResponse = await response.json();
+        console.log("New Game Started:", newGameResponse);
+
+        gameId = newGameResponse.id;
+        playerId = newGameResponse.userPlayerId;
+        drawGameView()
+        return;
+
+    } catch (error) {
+        console.error("There was a problem with the start game operation:", error);
     }
-    else {
-        currentViewPlayerId = player1Id;
-        opponentPlayerId = player2Id;
+}
+
+
+async function loginPlayer(event) {
+    event.preventDefault();
+    let userName = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+    console.log("start login");
+    try {
+        const response = await fetch(`/api/Users/BearerToken`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                userName: userName,
+                password: password
+            }),
+        });
+        console.log("Response:", response);
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok", response);
+        }
+        const loginResponse = await response.json();
+        console.log("Login Successful");
+        JWTToken = loginResponse.token;
+        drawMenuView()
+        return;
+    } catch (error) {
+        console.error("There was a problem with the login operation:", error);
     }
+}
+
+async function JoinGame(event) {
+    var sourceButton = event.srcElement;
+    var id = sourceButton.getAttribute("gameid");
+    try {
+        const response = await fetch(`/api/games/GermanWhist/${id}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const gameInfo = await response.json();
+        console.log("Join Game successful");
+
+        gameId = gameInfo.id;
+        playerId = gameInfo.userPlayerId;
+        drawGameView();
+
+        return;
+    } catch (error) {
+        console.error("There was a problem with the join game operation:", error);
+    }
+}
+
+async function LoadOpenGames() {
+    try {
+        const response = await fetch(`/api/games/GermanWhist`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const openGamesResponse = await response.json();
+        console.log("Fetching open games successful");
+        var openGamesList = [];
+        openGamesResponse.forEach(openGame => {
+            var li = document.createElement("li");
+
+            var span = document.createElement("span");
+            span.innerHTML = `Join Game of Player ${openGame.opponentPlayerId}`;
+            li.appendChild(span);
+
+            var button = document.createElement("button");
+            button.setAttribute("gameId", openGame.id);
+            button.setAttribute("class", "btn btn-primary float-end");
+            button.addEventListener('click', JoinGame);
+            button.innerHTML = "Join"
+            li.appendChild(button);
+            openGamesList.push(li);
+        });
+        document.getElementById("openGamesList").replaceChildren(...openGamesList);
+        return;
+    } catch (error) {
+        console.error("There was a problem with the loading of open games:", error);
+    }
+}
+
+async function LoadOngoingGamesOfUser() {
+    try {
+        const response = await fetch(`/api/Users/games/GermanWhist`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`,
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const ongoingGamesResponse = await response.json();
+        console.log("Fetching open games successful");
+        var ongoingGamesList = [];
+        ongoingGamesResponse.forEach(ongoingGame => {
+            var li = document.createElement("li");
+            li.setAttribute("class", "m-1");
+
+            var outerDiv = document.createElement("div");
+            outerDiv.setAttribute("class", "d-flex justify-content-between");
+
+            var span = document.createElement("span");
+            span.innerHTML = `Resume Game ${ongoingGame.id} against Player ${ongoingGame.opponentPlayerId}`;
+
+            var resumeButton = document.createElement("button");
+            resumeButton.setAttribute("gameId", ongoingGame.id);
+            resumeButton.setAttribute("class", "btn btn-primary");
+            resumeButton.addEventListener('click', resumeGame);
+            resumeButton.innerHTML = "Resume"
+
+            var deleteButton = document.createElement("button");
+            deleteButton.setAttribute("gameId", ongoingGame.id);
+            deleteButton.setAttribute("class", "btn btn-danger");
+            deleteButton.addEventListener('click', deleteGameEvent);
+            deleteButton.innerHTML = "Delete"
+
+            var buttonDiv = document.createElement("div");
+            buttonDiv.className = "d-flex justify-content-end";
+            buttonDiv.appendChild(resumeButton);
+            buttonDiv.appendChild(deleteButton);
+
+            li.appendChild(outerDiv);
+            outerDiv.appendChild(span);
+            outerDiv.appendChild(buttonDiv);
+
+            ongoingGamesList.push(li);
+        });
+        document.getElementById("ongoingGamesList").replaceChildren(...ongoingGamesList);
+        return;
+    } catch (error) {
+        console.error("There was a problem with the Loading of the ongoing games:", error);
+    }
+}
+
+async function deleteGameEvent(event) {
+    var sourceButton = event.srcElement;
+    var id = sourceButton.getAttribute("gameid");
+    var result = confirm(`Are you sure that you want to delete game ${id}?`);
+    if (result) {
+        await deleteGame(id);
+    }
+}
+async function deleteGame(id) {
+
+    try {
+        const response = await fetch(`/api/games/GermanWhist/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        drawMenuView();
+    } catch (error) {
+        console.error("There was a problem with the delete operation:", error);
+    }
+}
+
+async function resumeGame(event) {
+    var sourceButton = event.srcElement;
+    var id = sourceButton.getAttribute("gameid");
+
+    try {
+        const response = await fetch(`/api/games/GermanWhist/${id}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWTToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const gameResponse = await response.json();
+        gameId = gameResponse.id;
+        playerId = gameResponse.userPlayerId;
+        drawGameView();
+    } catch (error) {
+        console.error("There was a problem with the resume game operation:", error);
+    }
+}
+
+function drawLoginView() {
+    document.getElementById("loginBox").style.display = "contents";
+    document.getElementById("menuBox").style.display = "none";
+    document.getElementById("gameBox").style.display = "none";
+}
+
+async function drawMenuView() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("menuBox").style.display = "contents";
+    document.getElementById("gameBox").style.display = "none";
+
+    document.getElementById("startNewGameButton").addEventListener("click", startNewGameAgainstHumanPlayer);
+    document.getElementById("startBotGameButton").addEventListener("click", startNewGameAgainstBotPlayer);
+
+
+    await LoadOpenGames();
+    await LoadOngoingGamesOfUser();
+}
+
+async function drawGameView() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("menuBox").style.display = "none";
+    document.getElementById("gameBox").style.display = "contents";
+
+    document.getElementById("menuButton").addEventListener("click", drawMenuView);
+    document.getElementById("playerId").innerHTML = playerId;
+    document.getElementById("gameId").innerHTML = gameId;
+
 
     gameState = await gameController.getPlayerView();
+    cardsList = await gameController.getCardsList();
+    addFileNamesToCards(cardsList);
     if (!gameState.isPlayerCurrentPlayer) {
         gameController.startPollingGameState();
-    }
-    else {
-        gameController.waitingForOtherPlayer = false;
     }
     drawer.drawGameState()
 }
 
+var JWTToken = "";
 
-var gameId = 2;
-const player1Id = 1;
-const player2Id = 2;
+var OpenGames;
 
-var currentViewPlayerId = player1Id;
-var opponentPlayerId = player2Id;
+var gameId;
+var playerId;
+
 
 var gameState;
 var cardsList;
@@ -368,13 +596,7 @@ gameController.setDrawer(drawer);
 drawer.setGameController(gameController);
 
 document.addEventListener("DOMContentLoaded", async (event) => {
-    gameState = await gameController.getPlayerView();
-    cardsList = await gameController.getCardsList();
-    addFileNamesToCards(cardsList);
-    document.getElementById("changePlayerButton").addEventListener("click", changePlayer)
-    if (!gameState.isPlayerCurrentPlayer) {
-        gameController.startPollingGameState();
-    }
-    drawer.drawGameState()
+    drawLoginView()
+    document.getElementById("loginButton").addEventListener("click", loginPlayer)
 })
 

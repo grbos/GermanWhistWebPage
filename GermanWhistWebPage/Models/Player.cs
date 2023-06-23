@@ -1,8 +1,8 @@
 ﻿namespace GermanWhistWebPage.Models
 {
-    public class Player
+    public abstract class Player
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public abstract string Name { get; }
     }
 }

@@ -10,11 +10,9 @@ namespace GermanWhistWebPage.Models
         public int Player1Id { get; set; }
         [ForeignKey("Player1Id")]
         public Player Player1 { get; set; }
-        public int Player2Id { get; set; }
+        public int? Player2Id { get; set; }
         [ForeignKey("Player2Id")]
-        public Player Player2 { get; set; }
-
-        // public GameState GameState { get; set; }
+        public Player? Player2 { get; set; }
 
         public ICollection<int> CardStack { get; set; }
 
@@ -29,7 +27,7 @@ namespace GermanWhistWebPage.Models
 
         public int? PreviousPlayedCardIdPlayer1 { get; set; }
         public int? PreviousPlayedCardIdPlayer2 { get; set; }
-        
+
         public int? TrickWiningPlayerPreviousRound { get; set; }
 
 
@@ -45,20 +43,24 @@ namespace GermanWhistWebPage.Models
         public int RoundScorePlayer1 { get; set; }
         public int RoundScorePlayer2 { get; set; }
 
-        public ICollection<int>? HandCurrentPlayer { get
+        public ICollection<int>? HandCurrentPlayer
+        {
+            get
             {
                 if (CurrentPlayerId == Player1Id)
                     return HandPlayer1;
                 else
                     return HandPlayer2;
-            } 
+            }
         }
-        public bool IsEndOfTrick { get
+        public bool IsEndOfTrick
+        {
+            get
             {
                 if (PlayedCardIdPlayer1 == null || PlayedCardIdPlayer2 == null)
                     return false;
                 return true;
-            } 
+            }
         }
 
         public bool IsEndOfRound
@@ -80,5 +82,19 @@ namespace GermanWhistWebPage.Models
                 return false;
             }
         }
+
+        public bool HasGameStarted
+        {
+            get
+            {
+                if (Player2Id != null)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public bool IsBotGame { get; set; }
     }
 }

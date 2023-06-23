@@ -17,7 +17,7 @@ namespace GermanWhistWebPage.Services
         }
         public void deleteGame(Game game) { }
 
-        public Game createGame(int player1Id, int player2Id)
+        public Game createGame(int player1Id, int? player2Id, bool isBotGame)
         {
 
             List<int> shuffledCards = _cardService.GetShuffeledCards();
@@ -41,7 +41,9 @@ namespace GermanWhistWebPage.Services
                 TotalScorePlayer1 = 0,
                 TotalScorePlayer2 = 0,
                 RoundScorePlayer1 = 0,
-                RoundScorePlayer2 = 0
+                RoundScorePlayer2 = 0,
+
+                IsBotGame = isBotGame
             };
         }
 
@@ -114,7 +116,7 @@ namespace GermanWhistWebPage.Services
             int nextPlayerId;
             if (!game.IsEndOfTrick)
             {
-                nextPlayerId = game.CurrentPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
+                nextPlayerId = game.CurrentPlayerId == game.Player1Id ? game.Player2Id.GetValueOrDefault() : game.Player1Id;
                 game.CurrentPlayerId = nextPlayerId;
                 return;
 
@@ -136,7 +138,7 @@ namespace GermanWhistWebPage.Services
                 List<int> shuffledCards = _cardService.GetShuffeledCards();
                 var cardStack = shuffledCards.Skip(2 * _nCardsPerPlayer).ToList();
 
-                int nextStartPlayerId = game.StartingPlayerId == game.Player1Id ? game.Player2Id : game.Player1Id;
+                int nextStartPlayerId = game.StartingPlayerId == game.Player1Id ? game.Player2Id.GetValueOrDefault() : game.Player1Id;
                 game.CardStack = cardStack;
                 game.HandPlayer1 = shuffledCards.Take(_nCardsPerPlayer).ToList();
                 game.HandPlayer2 = shuffledCards.Skip(_nCardsPerPlayer).Take(_nCardsPerPlayer).ToList();
@@ -209,14 +211,14 @@ namespace GermanWhistWebPage.Services
             }
             if (player1Card.Suit != game.TrumpSuit && player2Card.Suit == game.TrumpSuit)
             {
-                return game.Player2Id;
+                return game.Player2Id.GetValueOrDefault();
             }
             if (player1Card.Suit == game.TrumpSuit && player2Card.Suit == game.TrumpSuit)
             {
                 if (player1Card.Number > player2Card.Number)
                     return game.Player1Id;
                 else
-                    return game.Player2Id;
+                    return game.Player2Id.GetValueOrDefault();
             }
 
 
@@ -226,13 +228,13 @@ namespace GermanWhistWebPage.Services
             }
             if (player1Card.Suit != leadCardSuit && player2Card.Suit == leadCardSuit)
             {
-                return game.Player2Id;
+                return game.Player2Id.GetValueOrDefault();
             }
 
             if (player1Card.Number > player2Card.Number)
                 return game.Player1Id;
             else
-                return game.Player2Id;
+                return game.Player2Id.GetValueOrDefault();
 
         }
 
