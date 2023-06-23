@@ -12,9 +12,7 @@ namespace GermanWhistWebPage.Models
         public Player Player1 { get; set; }
         public int? Player2Id { get; set; }
         [ForeignKey("Player2Id")]
-        public Player Player2 { get; set; }
-
-        // public GameState GameState { get; set; }
+        public Player? Player2 { get; set; }
 
         public ICollection<int> CardStack { get; set; }
 
@@ -77,6 +75,18 @@ namespace GermanWhistWebPage.Models
             {
                 if (TotalScorePlayer1 >= TargetScore || TotalScorePlayer2 >= TargetScore)
                     return true;
+                return false;
+            }
+        }
+
+        public bool HasGameStarted
+        {
+            get
+            {
+                if (Player2Id != null)
+                {
+                    return true;
+                }
                 return false;
             }
         }

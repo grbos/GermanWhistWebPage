@@ -3,6 +3,7 @@ using System;
 using GermanWhistWebPage.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GermanWhistWebPage.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20230623073755_allowUnstartedGames")]
+    partial class allowUnstartedGames
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.7");
@@ -95,7 +98,7 @@ namespace GermanWhistWebPage.Migrations
 
                     b.HasIndex("Player2Id");
 
-                    b.ToTable("Games", (string)null);
+                    b.ToTable("Games");
                 });
 
             modelBuilder.Entity("GermanWhistWebPage.Models.Player", b =>
@@ -110,7 +113,7 @@ namespace GermanWhistWebPage.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Player", (string)null);
+                    b.ToTable("Player");
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("Player");
 

@@ -42,12 +42,16 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-            var games = await _context.Games.ToListAsync();
-            if (games == null)
+            //var games = await _context.Games.ToListAsync();
+            var gameDTOs = await _context.Games
+                .Where(g => g.Player2Id == null)
+                .Select(game => new GameInfoDTO(game))
+                .ToListAsync();
+            if (!gameDTOs.Any())
             {
                 return NotFound();
             }
-            return games.Select(game => new GameInfoDTO(game)).ToList();
+            return gameDTOs;
         }
 
         //[Authorize]
@@ -65,6 +69,35 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
+
+            return new GameInfoDTO(game);
+        }
+
+        // POST: api/games/GermanWhist/5
+        [Authorize]
+        [HttpPost("{id}")]
+        public async Task<ActionResult<GameInfoDTO>> JoinGame(int id)
+        {
+            if (_context.Games == null)
+                return NotFound();
+
+
+            var game = await _context.Games.FindAsync(id);
+
+            if (game == null)
+                return NotFound();
+            
+
+            if (game.HasGameStarted)
+                return BadRequest("Game has already started and cannot be joined");
+
+            Player? player = await GetCurrentPlayer();
+            if (player == null)
+                return Problem("User Could not be connected to a player");
+
+            game.Player2 = player;
+
+            await _context.SaveChangesAsync();
 
             return new GameInfoDTO(game);
         }
@@ -129,12 +162,10 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Player player = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
+
+            Player? player = await GetCurrentPlayer();
             if (player == null)
-            {
-                return BadRequest("Bad credentials");
-            }
+                return Problem("User Could not be connected to a player");
 
             try
             {
@@ -159,10 +190,10 @@ namespace GermanWhistWebPage.Controllers
             {
                 return Problem("Entity set 'GameContext.Games'  is null.");
             }
-            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Player player1 = await _context.HumanPlayers.SingleOrDefaultAsync(p => p.IdentityUserId == userId);
+
+            Player? player1 = await GetCurrentPlayer();
             if (player1 == null)
-                return BadRequest("Bad Credentials");
+                return Problem("User Could not be connected to a player");
 
 
             Player? player2 = null;
@@ -209,12 +240,11 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Player player = await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+
+            Player? player = await GetCurrentPlayer();
             if (player == null)
-            {
-                return BadRequest("Bad credentials");
-            }
+                return Problem("User Could not be connected to a player");
+
             if (game.Player1 != player && game.Player2 != player)
             {
                 return BadRequest("Player not part of this game");
@@ -236,6 +266,12 @@ namespace GermanWhistWebPage.Controllers
         private bool GameExists(int id)
         {
             return (_context.Games?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
+        private async Task<Player?> GetCurrentPlayer()
+        {
+            String userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
         }
     }
 }

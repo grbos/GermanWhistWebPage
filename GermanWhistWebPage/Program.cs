@@ -78,8 +78,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 
-// This Clear() call solves Bug in mapping of JWT Token to Dot Net JWT handler
-// where the sub claim gets mapped to the nameIdentifier claim
+// This Clear() call solves a Bug in mapping of JWT Token to the Dot Net JWT handler
+// where the sub claim wrongly gets mapped to the nameIdentifier claim
 // https://github.com/IdentityServer/IdentityServer4/issues/2968#issuecomment-510996164
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
