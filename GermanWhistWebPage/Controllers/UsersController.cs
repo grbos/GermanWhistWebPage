@@ -1,8 +1,12 @@
 ﻿using GermanWhistWebPage.Models;
 using GermanWhistWebPage.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Numerics;
+using System.Security.Claims;
 
 namespace GermanWhistWebPage.Controllers
 {
@@ -104,5 +108,28 @@ namespace GermanWhistWebPage.Controllers
             return Ok(token);
         }
 
+        // GET: api/Users/games/GermanWhist
+        [Authorize]
+        [HttpGet("games/GermanWhist")]
+        public async Task<ActionResult<List<GameInfoDTO>>> GetGermanWhistGamesOfUser()
+        {
+            if (_gameContext.Games == null)
+            {
+                return NotFound();
+            }
+            
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Player? player = _gameContext.HumanPlayers.FirstOrDefault(p => p.IdentityUserId == userId);
+            if (player == null)
+                return Problem("User could not be connected to player");
+
+            List< GameInfoDTO> gameDTOs = await _gameContext.Games
+                .Where(g=> ((g.Player1Id == player.Id || g.Player2Id == player.Id) &&               // Is player playing
+                !(g.TotalScorePlayer1 >= g.TargetScore || g.TotalScorePlayer2 >= g.TargetScore)))   // Has game not ended)
+                .Select(game => new GameInfoDTO(game, player.Id))
+                .ToListAsync();
+
+            return gameDTOs;
+        }
     }
 }

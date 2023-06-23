@@ -33,7 +33,7 @@ namespace GermanWhistWebPage.Controllers
             _userManager = userManager;
         }
 
-        //[Authorize]
+        [Authorize]
         // GET: api/games/GermanWhist
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameInfoDTO>>> GetGames()
@@ -42,19 +42,18 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
-            //var games = await _context.Games.ToListAsync();
+            Player player = GetCurrentPlayer();
+            if (player == null)
+                return Problem("User could not be mapped to player");
+
             var gameDTOs = await _context.Games
                 .Where(g => g.Player2Id == null)
-                .Select(game => new GameInfoDTO(game))
+                .Select(game => new GameInfoDTO(game, player.Id))
                 .ToListAsync();
-            if (!gameDTOs.Any())
-            {
-                return NotFound();
-            }
             return gameDTOs;
         }
 
-        //[Authorize]
+        [Authorize]
         // GET: api/games/GermanWhist/5
         [HttpGet("{id}")]
         public async Task<ActionResult<GameInfoDTO>> GetGame(int id)
@@ -69,8 +68,11 @@ namespace GermanWhistWebPage.Controllers
             {
                 return NotFound();
             }
+            Player player = GetCurrentPlayer();
+            if (player == null)
+                return Problem("User could not be mapped to player");
 
-            return new GameInfoDTO(game);
+            return new GameInfoDTO(game,player.Id);
         }
 
         // POST: api/games/GermanWhist/5
@@ -99,7 +101,7 @@ namespace GermanWhistWebPage.Controllers
 
             await _context.SaveChangesAsync();
 
-            return new GameInfoDTO(game);
+            return new GameInfoDTO(game, player.Id);
         }
 
         // GET: api/games/GermanWhist/5/player-view
@@ -232,7 +234,7 @@ namespace GermanWhistWebPage.Controllers
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetGame", new { id = game.Id }, new GameInfoDTO(game));
+            return CreatedAtAction("GetGame", new { id = game.Id }, new GameInfoDTO(game, player1.Id));
         }
 
         // DELETE: api/games/GermanWhist/5
@@ -279,12 +281,12 @@ namespace GermanWhistWebPage.Controllers
 
         private async Task<Player?> GetCurrentPlayerAsync()
         {
-            String userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
         }
         private Player? GetCurrentPlayer()
         {
-            String userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return _context.HumanPlayers.FirstOrDefault(p => p.IdentityUserId == userId);
         }
     }

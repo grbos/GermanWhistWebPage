@@ -20,18 +20,82 @@
 
 
     <!-- TODO: Deal with this -->
-     <script>
+    <script>
     //const userId = {{ current_user.id }};
     //const gameStateId = {{ game_state_id }};
     //var gameState = JSON.parse('{{ game_state | tojson | safe}}');
     //var cardsList = JSON.parse('{{ cards_list | tojson | safe}}');
-    </script> 
+    </script>
 </head>
 <body>
-    <div id="content">
+    <div id="loginBox">
+        <div class="d-flex justify-content-center h-100 m-5">
+            <div>
+                <div class="mb-4">
+                    <h3>Sign In</h3>
+                </div>
+                <div>
+                    <form>
+                        <div class="input-group form-group mb-3">
+                            <input id="username" type="text" class="form-control" placeholder="username" value="p6">
+                        </div>
+                        <div class="input-group form-group mb-3">
+                            <input id="password" type="password" class="form-control" placeholder="password" value="string">
+                        </div>
+                        <button id="loginButton" class="btn btn-primary">
+                            Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="menuBox">
+        <div class="d-flex justify-content-center h-100 m-5 ">
+            <div class="col-md-4 mx-auto">
+                <div class="mb-4">
+                    <h3>Menu</h3>
+                </div>
+                <div class="">
+                    <div class=" mb-5">
+                        <h4 class="mb-3"> Resume an ongoing Game</h4>
+                        <ul id="ongoingGamesList" class="list-group">
+                        </ul>
+                    </div>
+                    <div class=" mb-5">
+                        <h4 class="mb-3"> Join an open Game</h4>
+                        <ul id="openGamesList" class="list-group">
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="mb-3">
+                            <h4> Start a new Game against other players</h4>
+                        </div>
+                        <button class="btn btn-primary mb-4" id="startNewGameButton">
+                            Start new Game
+                        </button>
+                    </div>
+                    <div>
+                        <div class="mb-3">
+                            <h4> Start a Game against a bot</h4>
+                        </div>
+                        <button class="btn btn-primary mb-4" id="startBotGameButton">
+                            Start Bot Game
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="gameBox">
         <div class="d-flex m-3">
             <div class="me-auto">
-                <button id="changePlayerButton" Class="btn btn-primary">Change to other players View</button>
+                <button id="menuButton" class="btn btn-primary">Menu</button>
+                <h3>
+                    Player Id: <span id="playerId"></span>  -  GameId: <span id="gameId"></span>
+                </h3>
             </div>
             <div class="p-2">
                 <h3>Score: <span id="player-score">0</span>:<span id="opponent-score">0</span> - Target Score: <span id="target-score">0</span></h3>

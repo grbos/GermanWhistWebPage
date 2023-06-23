@@ -3,15 +3,16 @@
     public class GameInfoDTO
     {
         public int Id { get; private set; }
-        public int Player1Id { get; private set; }
-        public int? Player2Id { get; private set; }
+        public int? UserPlayerId { get; private set; }
+        public int? OpponentPlayerId { get; private set; }
         public bool HasGameStarted { get; private set; }
-        public GameInfoDTO(Game game)
+        public GameInfoDTO(Game game, int playerId)
         {
             Id = game.Id;
-            Player1Id = game.Player1Id;
-            Player2Id = game.Player2Id;
+            UserPlayerId = playerId == game.Player1Id ? game.Player1Id : game.Player2Id;
+            OpponentPlayerId = playerId != game.Player1Id ? game.Player1Id : game.Player2Id;
             HasGameStarted = game.HasGameStarted;
+
         }
     }
 }
