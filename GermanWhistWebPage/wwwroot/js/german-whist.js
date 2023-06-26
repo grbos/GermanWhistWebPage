@@ -170,7 +170,7 @@ class GameController {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${JWTToken}`,
+                    "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT)}`,
                 },
                 body: JSON.stringify({
                     cardId: cardId
@@ -212,7 +212,7 @@ class GameController {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${JWTToken}`,
+                    "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT)}`,
                 },
             });
 
@@ -312,7 +312,7 @@ async function startNewGame(JsonBody) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT)}`
             },
             body: JsonBody
 
@@ -358,7 +358,8 @@ async function loginPlayer(event) {
         }
         const loginResponse = await response.json();
         console.log("Login Successful");
-        JWTToken = loginResponse.token;
+
+        localStorage.setItem(germanWhistJWT,loginResponse.token);
         drawMenuView()
         return;
     } catch (error) {
@@ -374,7 +375,7 @@ async function JoinGame(event) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT) }`
             }
         });
 
@@ -400,7 +401,7 @@ async function LoadOpenGames() {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT) }`
             }
         });
 
@@ -438,7 +439,7 @@ async function LoadOngoingGamesOfUser() {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`,
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT) }`,
             }
         });
 
@@ -503,7 +504,7 @@ async function deleteGame(id) {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`,
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT) }`,
             },
         });
 
@@ -525,7 +526,7 @@ async function resumeGame(event) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${JWTToken}`,
+                "Authorization": `Bearer ${localStorage.getItem(germanWhistJWT) }`,
             },
         });
 
@@ -541,10 +542,20 @@ async function resumeGame(event) {
     }
 }
 
+function logOut() {
+    localStorage.removeItem(germanWhistJWT);
+    drawLoginView();
+}
+
 function drawLoginView() {
-    document.getElementById("loginBox").style.display = "contents";
-    document.getElementById("menuBox").style.display = "none";
-    document.getElementById("gameBox").style.display = "none";
+    if (localStorage.getItem(germanWhistJWT) === null) {
+        document.getElementById("loginBox").style.display = "contents";
+        document.getElementById("menuBox").style.display = "none";
+        document.getElementById("gameBox").style.display = "none";
+    }
+    else {
+        drawMenuView();
+    }
 }
 
 async function drawMenuView() {
@@ -554,7 +565,7 @@ async function drawMenuView() {
 
     document.getElementById("startNewGameButton").addEventListener("click", startNewGameAgainstHumanPlayer);
     document.getElementById("startBotGameButton").addEventListener("click", startNewGameAgainstBotPlayer);
-
+    document.getElementById("logOutButton").addEventListener("click", logOut);
 
     await LoadOpenGames();
     await LoadOngoingGamesOfUser();
@@ -579,7 +590,7 @@ async function drawGameView() {
     drawer.drawGameState()
 }
 
-var JWTToken = "";
+const germanWhistJWT = "germanWhistJWTToken";
 
 var OpenGames;
 
