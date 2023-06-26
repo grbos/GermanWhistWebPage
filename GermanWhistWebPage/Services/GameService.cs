@@ -128,8 +128,6 @@ namespace GermanWhistWebPage.Services
             game.PreviousPlayedCardIdPlayer2 = game.PlayedCardIdPlayer2;
             game.PlayedCardIdPlayer1 = null;
             game.PlayedCardIdPlayer2 = null;
-            nextPlayerId = winningPlayerId;
-            game.TrickStartPlayerId = nextPlayerId;
             game.TrickWiningPlayerPreviousRound = winningPlayerId;
 
 
@@ -143,6 +141,9 @@ namespace GermanWhistWebPage.Services
                 game.HandPlayer1 = shuffledCards.Take(_nCardsPerPlayer).ToList();
                 game.HandPlayer2 = shuffledCards.Skip(_nCardsPerPlayer).Take(_nCardsPerPlayer).ToList();
 
+                game.RoundScorePlayer1 = 0;
+                game.RoundScorePlayer2 = 0;
+
                 game.StartingPlayerId = nextStartPlayerId;
                 game.TrickStartPlayerId = nextStartPlayerId;
                 game.CurrentPlayerId = nextStartPlayerId;
@@ -151,6 +152,8 @@ namespace GermanWhistWebPage.Services
             }
             else
             {
+                nextPlayerId = winningPlayerId;
+                game.TrickStartPlayerId = nextPlayerId;
                 game.CurrentPlayerId = nextPlayerId;
             }
 
