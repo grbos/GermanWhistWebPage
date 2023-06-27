@@ -47,7 +47,7 @@ namespace GermanWhistWebPage.Controllers
                 return Problem("User could not be mapped to player");
 
             var gameDTOs = await _context.Games
-                .Where(g => g.Player2Id == null)
+                .Where(g => g.Player2Id == null && g.Player1Id != player.Id)
                 .Select(game => new GameInfoDTO(game, player.Id))
                 .ToListAsync();
             return gameDTOs;

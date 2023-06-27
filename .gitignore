@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /GermanWhistWebPage/GermanWhist.db-wal
 /GermanWhistWebPage/GermanWhist.db-shm
+/GermanWhistWebPage/ClientApp/german-whist-frontend/.angular/cache/15.2.8/babel-webpack
