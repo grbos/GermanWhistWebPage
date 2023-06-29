@@ -47,9 +47,12 @@ namespace GermanWhistWebPage.Controllers
                 return Problem("User could not be mapped to player");
 
             var gameDTOs = await _context.Games
+                .Include(g => (g.Player1 as HumanPlayer).IdentityUser)
                 .Where(g => g.Player2Id == null && g.Player1Id != player.Id)
                 .Select(game => new GameInfoDTO(game, player.Id))
                 .ToListAsync();
+
+
             return gameDTOs;
         }
 
@@ -281,12 +284,16 @@ namespace GermanWhistWebPage.Controllers
         private async Task<Player?> GetCurrentPlayerAsync()
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return await _context.HumanPlayers.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+            return await _context.HumanPlayers.
+                Include(p => p.IdentityUser)
+                .FirstOrDefaultAsync(p => p.IdentityUserId == userId);
         }
         private Player? GetCurrentPlayer()
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return _context.HumanPlayers.FirstOrDefault(p => p.IdentityUserId == userId);
+            return _context.HumanPlayers
+                .Include(p => p.IdentityUser)
+                .FirstOrDefault(p => p.IdentityUserId == userId);
         }
     }
 }

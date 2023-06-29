@@ -123,11 +123,25 @@ namespace GermanWhistWebPage.Controllers
             if (player == null)
                 return Problem("User could not be connected to player");
 
-            List< GameInfoDTO> gameDTOs = await _gameContext.Games
-                .Where(g=> ((g.Player1Id == player.Id || g.Player2Id == player.Id) &&               // Is player playing
-                !(g.TotalScorePlayer1 >= g.TargetScore || g.TotalScorePlayer2 >= g.TargetScore)))   // Has game not ended)
-                .Select(game => new GameInfoDTO(game, player.Id))
-                .ToListAsync();
+            var humanPlayerGames = await _gameContext.Games
+            .Include(g => (g.Player1 as HumanPlayer).IdentityUser)
+            .Include(g => (g.Player2 as HumanPlayer).IdentityUser)
+            .Where(g => ((g.Player1Id == player.Id || g.Player2Id == player.Id) &&               // Is player playing
+            !(g.TotalScorePlayer1 >= g.TargetScore || g.TotalScorePlayer2 >= g.TargetScore) &&
+            (g.Player1 is HumanPlayer && g.Player2 is HumanPlayer)))   // Has game not ended)
+            .Select(game => new GameInfoDTO(game, player.Id))
+            .ToListAsync();
+
+            var botPlayerGames = await _gameContext.Games
+            .Include(g => (g.Player1 as HumanPlayer).IdentityUser)
+            .Include(g => g.Player2)
+            .Where(g => ((g.Player1Id == player.Id || g.Player2Id == player.Id) &&               // Is player playing
+            !(g.TotalScorePlayer1 >= g.TargetScore || g.TotalScorePlayer2 >= g.TargetScore) &&
+            (g.Player1 is HumanPlayer && g.Player2 is BotPlayer)))   // Has game not ended)
+            .Select(game => new GameInfoDTO(game, player.Id))
+            .ToListAsync();
+            
+            var gameDTOs = humanPlayerGames.Concat(botPlayerGames).ToList();
 
             return gameDTOs;
         }

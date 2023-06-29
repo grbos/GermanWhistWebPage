@@ -44,6 +44,11 @@ namespace GermanWhistWebPage.Models
             } 
         }
 
+        public bool HasGameEnded { get { 
+                return TotalScoreOpponent >= TargetScore || TotalScorePlayer >= TargetScore;
+            } 
+        }
+
         
 
 
