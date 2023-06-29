@@ -67,7 +67,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "GermanWhistOrigin",
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:4201").AllowAnyMethod().AllowAnyHeader();
+                          policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
                       });
 });
 var app = builder.Build();
@@ -82,10 +82,6 @@ if (app.Environment.IsDevelopment())
 app.UseCors("GermanWhistOrigin");
 
 app.UseHttpsRedirection();
-
-// used for static files in HTTP page
-app.UseDefaultFiles();
-app.UseStaticFiles();
 
 
 // This Clear() call solves a Bug in mapping of JWT Token to the Dot Net JWT handler
