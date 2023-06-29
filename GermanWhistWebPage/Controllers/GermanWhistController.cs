@@ -91,7 +91,18 @@ namespace GermanWhistWebPage.Controllers
 
             if (game == null)
                 return NotFound();
-            
+
+            await _context.Entry(game)
+            .Reference(g => g.Player1)
+            .LoadAsync();
+
+            if (game.Player1 is HumanPlayer humanPlayer)
+            {
+                await _context.Entry(humanPlayer)
+                    .Reference(p => p.IdentityUser)
+                    .LoadAsync();
+            }
+
 
             if (game.HasGameStarted)
                 return BadRequest("Game has already started and cannot be joined");
