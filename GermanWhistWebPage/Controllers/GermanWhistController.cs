@@ -185,6 +185,16 @@ namespace GermanWhistWebPage.Controllers
                 return NotFound();
             }
 
+            if (!game.HasGameStarted)
+            {
+                return BadRequest("Game has not yet started");
+            }
+
+            if (game.HasGameEnded)
+            {
+                return BadRequest("Game has already ended");
+            }
+
             Player? player = await GetCurrentPlayerAsync();
             if (player == null)
                 return Problem("User Could not be connected to a player");

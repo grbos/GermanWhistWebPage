@@ -69,7 +69,7 @@ namespace GermanWhistWebPage.Models
 
             IsPlayerStartingPlayer = game.StartingPlayerId == playerId;
             IsPlayerTrickStartPlayer = game.TrickStartPlayerId == playerId;
-            IsPlayerCurrentPlayer = game.CurrentPlayerId == playerId;
+            IsPlayerCurrentPlayer = !game.HasGameStarted? false : game.CurrentPlayerId == playerId;
 
             IsPlayerPreviousTrickWinner = game.TrickWiningPlayerPreviousRound == playerId;
 

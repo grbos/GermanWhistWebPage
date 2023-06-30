@@ -13,12 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-string sqliteDbPath = builder.Configuration.GetConnectionString("SQLiteConnection");
+//string sqliteDbPath = builder.Configuration.GetConnectionString("SQLiteConnection");
 
 // Change this to change database 
 builder.Services.AddDbContext<GameContext>(opt =>
     {
-        opt.UseSqlite(sqliteDbPath);
+        //opt.UseSqlite(sqliteDbPath);
+        opt.UseInMemoryDatabase("germanWhistDB");
     });
 
 builder.Services.AddScoped<CardService>();
@@ -28,8 +29,8 @@ builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<JwtService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddIdentityCore<IdentityUser>(options =>
@@ -67,7 +68,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "GermanWhistOrigin",
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+                          policy.WithOrigins("https://blue-bay-0100c3b03.3.azurestaticapps.net", "http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+
                       });
 });
 var app = builder.Build();
@@ -75,9 +77,25 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    //app.UseSwagger();
+    //app.UseSwaggerUI();
+
+    app.UseDeveloperExceptionPage();
+    //using (var scope = app.Services.CreateScope())
+    //{
+    //    var services = scope.ServiceProvider;
+    //    try
+    //    {
+    //        var context = services.GetRequiredService<GameContext>();
+    //        context.Database.Migrate();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw ex;
+    //    }
+    //}
 }
+
 
 app.UseCors("GermanWhistOrigin");
 
